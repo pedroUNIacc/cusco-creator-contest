@@ -647,6 +647,19 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!petName.trim() || !photo) return;
+    try {
+      const raw = localStorage.getItem("pitstop_pets");
+      const list = raw ? JSON.parse(raw) : [];
+      list.push({
+        id: Date.now(),
+        name: petName.trim(),
+        owner: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
+        photo,
+        votes: 0,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem("pitstop_pets", JSON.stringify(list));
+    } catch {}
     setSubmitted(true);
     setTimeout(onDone, 2000);
   }
