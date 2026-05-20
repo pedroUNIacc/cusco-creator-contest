@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import logo from "@/assets/logo.png";
-import mascot from "@/assets/mascot.png";
-import dogCaramelo from "@/assets/dog-caramelo.jpg";
-import dogGolden from "@/assets/dog-golden.jpg";
-import dogFox from "@/assets/dog-fox.jpg";
-import dogDoberman from "@/assets/dog-doberman.jpg";
-import dogRott from "@/assets/dog-rott.jpg";
+
+import dogCaramelo from "@/assets/dog-caramelo.png";
+import dogGolden from "@/assets/dog-golden.png";
+import dogFox from "@/assets/dog-fox.png";
+import dogDoberman from "@/assets/dog-doberman.png";
+import dogRott from "@/assets/dog-rott.png";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -212,16 +213,63 @@ function Hero() {
             </a>
           </div>
         </div>
-        <div className="relative">
-          <div className="absolute -inset-6 bg-primary/40 rounded-[3rem] -rotate-3 ink-border" aria-hidden />
-          <img
-            src={mascot}
-            alt="Mascote Pit Stop do Cusco"
-            className="relative w-full max-w-md mx-auto animate-wag drop-shadow-xl"
-          />
-        </div>
+        <HeroCarousel />
       </div>
     </section>
+  );
+}
+
+function HeroCarousel() {
+  const [api, setApi] = useState<CarouselApi | null>(null);
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    const onSelect = () => setCurrent(api.selectedScrollSnap());
+    api.on("select", onSelect);
+    const id = setInterval(() => api.scrollNext(), 3200);
+    return () => {
+      api.off("select", onSelect);
+      clearInterval(id);
+    };
+  }, [api]);
+
+  return (
+    <div className="relative">
+      <div className="absolute -inset-6 bg-primary/40 rounded-[3rem] -rotate-3 ink-border" aria-hidden />
+      <div className="relative bg-card rounded-[2.5rem] ink-border chunky-shadow overflow-hidden">
+        <Carousel opts={{ loop: true, align: "start" }} setApi={setApi}>
+          <CarouselContent className="ml-0">
+            {BREEDS.map((b) => (
+              <CarouselItem key={b.id} className="pl-0 basis-full">
+                <div className="relative aspect-[4/3] bg-bun">
+                  <img src={b.img} alt={b.name} className="w-full h-full object-cover" />
+                  <div className="absolute top-3 left-3 bg-accent text-accent-foreground font-display font-bold text-sm px-3 py-1 rounded-full ink-border chunky-shadow-sm">
+                    {b.name}
+                  </div>
+                  <div className="absolute bottom-3 right-3 bg-background font-display font-bold px-3 py-1 rounded-full ink-border chunky-shadow-sm">
+                    R$ {b.price},00
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+        <div className="flex justify-center gap-2 py-3 bg-background">
+          {BREEDS.map((b, i) => (
+            <button
+              key={b.id}
+              aria-label={`Ir para ${b.name}`}
+              onClick={() => api?.scrollTo(i)}
+              className={`h-2.5 rounded-full ink-border transition-all ${
+                current === i ? "w-8 bg-accent" : "w-2.5 bg-background"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
