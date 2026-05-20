@@ -245,9 +245,6 @@ function HeroCarousel() {
               <CarouselItem key={b.id} className="pl-0 basis-full">
                 <div className="relative aspect-[4/3] bg-bun">
                   <img src={b.img} alt={b.name} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 left-3 bg-accent text-accent-foreground font-display font-bold text-sm px-3 py-1 rounded-full ink-border chunky-shadow-sm">
-                    {b.name}
-                  </div>
                   <div className="absolute bottom-3 right-3 bg-background font-display font-bold px-3 py-1 rounded-full ink-border chunky-shadow-sm">
                     R$ {b.price},00
                   </div>
@@ -256,14 +253,14 @@ function HeroCarousel() {
             ))}
           </CarouselContent>
         </Carousel>
-        <div className="flex justify-center gap-2 py-3 bg-background">
+        <div className="flex justify-center gap-2.5 py-3 bg-background">
           {BREEDS.map((b, i) => (
             <button
               key={b.id}
               aria-label={`Ir para ${b.name}`}
               onClick={() => api?.scrollTo(i)}
-              className={`h-2.5 rounded-full ink-border transition-all ${
-                current === i ? "w-8 bg-accent" : "w-2.5 bg-background"
+              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${
+                current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
               }`}
             />
           ))}
