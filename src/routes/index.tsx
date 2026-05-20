@@ -245,9 +245,6 @@ function HeroCarousel() {
               <CarouselItem key={b.id} className="pl-0 basis-full">
                 <div className="relative aspect-[4/3] bg-bun">
                   <img src={b.img} alt={b.name} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-3 right-3 bg-background font-display font-bold px-3 py-1 rounded-full ink-border chunky-shadow-sm">
-                    R$ {b.price},00
-                  </div>
                 </div>
               </CarouselItem>
             ))}
@@ -650,6 +647,19 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!petName.trim() || !photo) return;
+    try {
+      const raw = localStorage.getItem("pitstop_pets");
+      const list = raw ? JSON.parse(raw) : [];
+      list.push({
+        id: Date.now(),
+        name: petName.trim(),
+        owner: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
+        photo,
+        votes: 0,
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem("pitstop_pets", JSON.stringify(list));
+    } catch {}
     setSubmitted(true);
     setTimeout(onDone, 2000);
   }
@@ -721,9 +731,19 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
 
 /* ---------------- CÃOCURSO ---------------- */
 
+type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
+
 function Caocurso() {
-  const [pets, setPets] = useState(MOCK_PETS);
+  const [pets, setPets] = useState<Pet[]>(MOCK_PETS);
   const [voted, setVoted] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pitstop_pets");
+      const stored: Pet[] = raw ? JSON.parse(raw) : [];
+      setPets([...stored, ...MOCK_PETS]);
+    } catch {}
+  }, []);
 
   const sorted = [...pets].sort((a, b) => b.votes - a.votes);
 
@@ -756,8 +776,12 @@ function Caocurso() {
                     👑 LÍDER DA MATILHA
                   </span>
                 )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl">
-                  {p.emoji}
+                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl overflow-hidden">
+                  {p.photo ? (
+                    <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{p.emoji}</span>
+                  )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between">
                   <div>
