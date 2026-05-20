@@ -253,14 +253,14 @@ function HeroCarousel() {
             ))}
           </CarouselContent>
         </Carousel>
-        <div className="flex justify-center gap-2 py-3 bg-background">
+        <div className="flex justify-center gap-2.5 py-3 bg-background">
           {BREEDS.map((b, i) => (
             <button
               key={b.id}
               aria-label={`Ir para ${b.name}`}
               onClick={() => api?.scrollTo(i)}
-              className={`h-2.5 rounded-full ink-border transition-all ${
-                current === i ? "w-8 bg-accent" : "w-2.5 bg-background"
+              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${
+                current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
               }`}
             />
           ))}
