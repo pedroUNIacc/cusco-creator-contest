@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import logo from "@/assets/logo.png";
 import mascot from "@/assets/mascot.png";
 import dogCaramelo from "@/assets/dog-caramelo.jpg";
@@ -100,13 +100,45 @@ const MOCK_PETS = [
   { id: 6, name: "Bento", owner: "@lulu", votes: 51, emoji: "🐕‍🦺" },
 ];
 
+/* ---------------- AUTH (localStorage) ---------------- */
+
+type User = { name: string; email: string };
+const AUTH_KEY = "pitstop_user";
+
+function getStoredUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+function useAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    setUser(getStoredUser());
+  }, []);
+  const login = (u: User) => {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(u));
+    setUser(u);
+  };
+  const logout = () => {
+    localStorage.removeItem(AUTH_KEY);
+    setUser(null);
+  };
+  return { user, login, logout };
+}
+
 function Index() {
+  const auth = useAuth();
   return (
     <div className="min-h-screen text-foreground">
-      <Header />
+      <Header user={auth.user} onLogout={auth.logout} />
       <main>
         <Hero />
-        <Simulator />
+        <Simulator auth={auth} />
         <Caocurso />
         <WhereWeAre />
       </main>
@@ -115,7 +147,7 @@ function Index() {
   );
 }
 
-function Header() {
+function Header({ user, onLogout }: { user: User | null; onLogout: () => void }) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 ink-border border-t-0 border-x-0">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
@@ -131,12 +163,25 @@ function Header() {
           <a href="#caocurso" className="px-3 py-2 rounded-full hover:bg-primary transition">🏆 Cãocurso</a>
           <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
         </nav>
-        <a
-          href="#simulador"
-          className="sm:hidden bg-accent text-accent-foreground font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm text-sm"
-        >
-          Montar 🌭
-        </a>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              <span className="hidden sm:inline text-sm font-bold">Olá, {user.name.split(" ")[0]} 🐾</span>
+              <button
+                onClick={onLogout}
+                className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-background"
+              >
+                Sair
+              </button>
+            </>
+          ) : null}
+          <a
+            href="#simulador"
+            className="sm:hidden bg-accent text-accent-foreground font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm text-sm"
+          >
+            Montar 🌭
+          </a>
+        </div>
       </div>
     </header>
   );
@@ -182,14 +227,25 @@ function Hero() {
 
 /* ---------------- SIMULATOR ---------------- */
 
-function Simulator() {
+function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
+  const [joinContest, setJoinContest] = useState(false);
   const [done, setDone] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showPetCard, setShowPetCard] = useState(false);
 
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
   const total = breed.price + (drink ? 1 : 0);
+
+  function handleAdopt() {
+    setDone(true);
+    if (joinContest) {
+      if (auth.user) setShowPetCard(true);
+      else setShowLogin(true);
+    }
+  }
 
   return (
     <section id="simulador" className="py-16 sm:py-24">
@@ -242,7 +298,7 @@ function Simulator() {
                 >
                   <span className={`h-6 w-11 rounded-full ink-border relative transition ${drink ? "bg-background" : "bg-muted"}`}>
                     <span
-                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-ink transition-all ${drink ? "left-6" : "left-0.5"}`}
+                      className={`absolute top-0.5 h-4 w-4 rounded-full transition-all ${drink ? "left-6" : "left-0.5"}`}
                       style={{ background: "var(--ink)" }}
                     />
                   </span>
@@ -277,8 +333,23 @@ function Simulator() {
                 placeholder="Ex: Ana, Tutor(a) do Pingo"
                 className="mt-1 w-full px-4 py-3 rounded-full ink-border bg-background text-foreground placeholder:text-foreground/40"
               />
+
+              <label className="mt-4 flex items-start gap-3 cursor-pointer select-none rounded-2xl p-3 bg-background/10 hover:bg-background/15 transition">
+                <input
+                  type="checkbox"
+                  checked={joinContest}
+                  onChange={(e) => setJoinContest(e.target.checked)}
+                  className="mt-1 h-5 w-5 accent-primary cursor-pointer"
+                />
+                <span className="text-sm leading-snug">
+                  <strong className="font-bold text-primary">🏆 Quero participar do Cãocurso do Mês!</strong>
+                  <br />
+                  <span className="opacity-80 text-xs">Inscreve teu cusco e concorre a uma cesta de mimos.</span>
+                </span>
+              </label>
+
               <button
-                onClick={() => setDone(true)}
+                onClick={handleAdopt}
                 disabled={!name.trim()}
                 className="mt-4 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm"
               >
@@ -287,17 +358,34 @@ function Simulator() {
             </aside>
           </div>
         ) : (
-          <Certificate
-            name={name}
-            breed={breed}
-            drink={drink}
-            total={total}
-            onReset={() => {
-              setDone(false);
-            }}
-          />
+          <>
+            <Certificate
+              name={name}
+              breed={breed}
+              drink={drink}
+              total={total}
+              onReset={() => {
+                setDone(false);
+                setShowPetCard(false);
+              }}
+            />
+            {showPetCard && auth.user && (
+              <PetSignupCard user={auth.user} onDone={() => setShowPetCard(false)} />
+            )}
+          </>
         )}
       </div>
+
+      {showLogin && (
+        <LoginModal
+          onClose={() => setShowLogin(false)}
+          onSuccess={(u) => {
+            auth.login(u);
+            setShowLogin(false);
+            setShowPetCard(true);
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -395,12 +483,202 @@ function Certificate({
   );
 }
 
+/* ---------------- LOGIN MODAL ---------------- */
+
+function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u: User) => void }) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Preenche tudo aí, humano 🐾");
+      return;
+    }
+    const usersRaw = localStorage.getItem("pitstop_users");
+    const users: Record<string, { name: string; password: string }> = usersRaw ? JSON.parse(usersRaw) : {};
+
+    if (mode === "signup") {
+      if (!name.trim()) return setError("Bota teu nome aí 🐶");
+      if (users[email]) return setError("Esse email já tá na matilha. Faz login!");
+      users[email] = { name, password };
+      localStorage.setItem("pitstop_users", JSON.stringify(users));
+      onSuccess({ name, email });
+    } else {
+      const u = users[email];
+      if (!u || u.password !== password) return setError("Email ou senha não latem juntos 🦴");
+      onSuccess({ name: u.name, email });
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center p-4 bg-ink/60 backdrop-blur-sm animate-pop"
+      style={{ background: "color-mix(in oklab, var(--ink) 60%, transparent)" }}
+      onClick={onClose}
+    >
+      <form
+        onSubmit={submit}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-card rounded-3xl ink-border chunky-shadow p-6 sm:p-7"
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-2xl font-bold">
+            {mode === "login" ? "Entrar na matilha 🐾" : "Virar matilha 🐶"}
+          </h3>
+          <button type="button" onClick={onClose} className="text-xl font-bold opacity-60 hover:opacity-100">
+            ✕
+          </button>
+        </div>
+        <p className="text-sm text-foreground/70 mt-1">
+          {mode === "login"
+            ? "Loga rapidinho pra inscrever teu cusco no Cãocurso."
+            : "Cria tua conta pra inscrever teu cusco no Cãocurso."}
+        </p>
+
+        <div className="mt-5 space-y-3">
+          {mode === "signup" && (
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome"
+              className="w-full px-4 py-3 rounded-full ink-border bg-background"
+            />
+          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="email@cusco.com"
+            className="w-full px-4 py-3 rounded-full ink-border bg-background"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
+            className="w-full px-4 py-3 rounded-full ink-border bg-background"
+          />
+        </div>
+
+        {error && <p className="mt-3 text-sm font-bold text-accent">{error}</p>}
+
+        <button className="mt-5 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow">
+          {mode === "login" ? "Entrar 🐾" : "Criar conta 🐶"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === "login" ? "signup" : "login");
+            setError("");
+          }}
+          className="mt-3 w-full text-sm font-bold opacity-80 hover:opacity-100"
+        >
+          {mode === "login" ? "Ainda não tem conta? Criar uma" : "Já tem conta? Entrar"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/* ---------------- PET SIGNUP CARD ---------------- */
+
+function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
+  const [petName, setPetName] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(String(reader.result));
+    reader.readAsDataURL(f);
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!petName.trim() || !photo) return;
+    setSubmitted(true);
+    setTimeout(onDone, 2000);
+  }
+
+  return (
+    <div className="mt-8 max-w-2xl mx-auto animate-pop">
+      <form
+        onSubmit={submit}
+        className="bg-card rounded-3xl ink-border chunky-shadow p-6 sm:p-8 relative overflow-hidden"
+      >
+        <div className="absolute inset-0 paw-bg" aria-hidden />
+        <div className="relative">
+          <span className="inline-block bg-accent text-accent-foreground font-bold text-xs px-3 py-1 rounded-full ink-border">
+            🏆 INSCRIÇÃO NO CÃOCURSO
+          </span>
+          <h3 className="mt-3 font-display text-3xl font-bold">Bora inscrever teu cusco, {user.name.split(" ")[0]}!</h3>
+          <p className="text-foreground/70 text-sm mt-1">
+            Manda o nome e a foto mais latida. A matilha julga.
+          </p>
+
+          {submitted ? (
+            <div className="mt-6 bg-primary/30 rounded-2xl ink-border p-6 text-center">
+              <p className="font-display text-2xl font-bold">Inscrito! Au au 🎉</p>
+              <p className="text-sm mt-2 opacity-80">
+                Teu cusco já tá na disputa. Boa sorte, tutor(a)!
+              </p>
+            </div>
+          ) : (
+            <div className="mt-5 grid sm:grid-cols-[160px_1fr] gap-5 items-start">
+              <label className="block aspect-square rounded-2xl ink-border border-dashed bg-background cursor-pointer overflow-hidden grid place-items-center text-center text-sm font-bold p-3">
+                {photo ? (
+                  <img src={photo} alt="Pet" className="w-full h-full object-cover" />
+                ) : (
+                  <span>📷<br />Solta a foto do teu cusco</span>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={onFile} />
+              </label>
+              <div className="space-y-3">
+                <input
+                  required
+                  value={petName}
+                  onChange={(e) => setPetName(e.target.value)}
+                  placeholder="Nome do teu cusco"
+                  className="w-full px-4 py-3 rounded-full ink-border bg-background"
+                />
+                <input
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  placeholder="@instagram (opcional)"
+                  className="w-full px-4 py-3 rounded-full ink-border bg-background"
+                />
+                <p className="text-xs opacity-70">
+                  Inscrevendo como <strong>{user.name}</strong> ({user.email}).
+                </p>
+                <button
+                  disabled={!petName.trim() || !photo}
+                  className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm"
+                >
+                  Mandar pro Cãocurso 🐶
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
 /* ---------------- CÃOCURSO ---------------- */
 
 function Caocurso() {
   const [pets, setPets] = useState(MOCK_PETS);
   const [voted, setVoted] = useState<Set<number>>(new Set());
-  const [showForm, setShowForm] = useState(false);
 
   const sorted = [...pets].sort((a, b) => b.votes - a.votes);
 
@@ -416,19 +694,8 @@ function Caocurso() {
         <SectionTitle
           kicker="ENGAJAMENTO VIRAL"
           title="Cãocurso do Mês 🏆"
-          subtitle="O cusco mais latido leva uma cesta cheia de mimos. Vote no seu favorito ou inscreva o seu."
+          subtitle="O cusco mais latido leva uma cesta cheia de mimos. Vote no seu favorito — pra inscrever o teu, marca a opção ao adotar seu cusco lá em cima!"
         />
-
-        <div className="mt-8 flex flex-wrap gap-3 justify-center">
-          <button
-            onClick={() => setShowForm((s) => !s)}
-            className="bg-accent text-accent-foreground font-bold px-6 py-3 rounded-full ink-border chunky-shadow"
-          >
-            {showForm ? "Fechar inscrição" : "Inscrever meu Cusco no Concurso 🐾"}
-          </button>
-        </div>
-
-        {showForm && <SignupForm onClose={() => setShowForm(false)} />}
 
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {sorted.map((p, i) => {
@@ -469,37 +736,6 @@ function Caocurso() {
         </div>
       </div>
     </section>
-  );
-}
-
-function SignupForm({ onClose }: { onClose: () => void }) {
-  const [submitted, setSubmitted] = useState(false);
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSubmitted(true);
-        setTimeout(onClose, 1500);
-      }}
-      className="mt-6 max-w-xl mx-auto bg-card rounded-3xl ink-border chunky-shadow p-6 space-y-4"
-    >
-      {submitted ? (
-        <p className="text-center font-display text-xl">Inscrição recebida! Au au 🎉</p>
-      ) : (
-        <>
-          <h3 className="font-display text-2xl font-bold text-center">Bora inscrever seu cusco?</h3>
-          <input required placeholder="Nome do pet" className="w-full px-4 py-3 rounded-full ink-border bg-background" />
-          <input required placeholder="@instagram do tutor" className="w-full px-4 py-3 rounded-full ink-border bg-background" />
-          <label className="block w-full text-center px-4 py-6 rounded-2xl ink-border border-dashed bg-background cursor-pointer font-bold">
-            📷 Solta a foto do seu cusco aqui
-            <input type="file" accept="image/*" className="hidden" />
-          </label>
-          <button className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow">
-            Mandar pro Cãocurso 🐶
-          </button>
-        </>
-      )}
-    </form>
   );
 }
 
