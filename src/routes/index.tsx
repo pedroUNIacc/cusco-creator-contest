@@ -776,8 +776,12 @@ function Caocurso() {
                     👑 LÍDER DA MATILHA
                   </span>
                 )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl">
-                  {p.emoji}
+                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl overflow-hidden">
+                  {p.photo ? (
+                    <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{p.emoji}</span>
+                  )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between">
                   <div>
