@@ -245,9 +245,6 @@ function HeroCarousel() {
               <CarouselItem key={b.id} className="pl-0 basis-full">
                 <div className="relative aspect-[4/3] bg-bun">
                   <img src={b.img} alt={b.name} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-3 right-3 bg-background font-display font-bold px-3 py-1 rounded-full ink-border chunky-shadow-sm">
-                    R$ {b.price},00
-                  </div>
                 </div>
               </CarouselItem>
             ))}
