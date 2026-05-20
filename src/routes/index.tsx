@@ -731,9 +731,19 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
 
 /* ---------------- CÃOCURSO ---------------- */
 
+type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
+
 function Caocurso() {
-  const [pets, setPets] = useState(MOCK_PETS);
+  const [pets, setPets] = useState<Pet[]>(MOCK_PETS);
   const [voted, setVoted] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pitstop_pets");
+      const stored: Pet[] = raw ? JSON.parse(raw) : [];
+      setPets([...stored, ...MOCK_PETS]);
+    } catch {}
+  }, []);
 
   const sorted = [...pets].sort((a, b) => b.votes - a.votes);
 
