@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import logo from "@/assets/logo.png";
 import mascot from "@/assets/mascot.png";
-import dogCaramelo from "@/assets/dog-caramelo.jpg";
-import dogGolden from "@/assets/dog-golden.jpg";
-import dogFox from "@/assets/dog-fox.jpg";
-import dogDoberman from "@/assets/dog-doberman.jpg";
-import dogRott from "@/assets/dog-rott.jpg";
+import dogCaramelo from "@/assets/dog-caramelo.png";
+import dogGolden from "@/assets/dog-golden.png";
+import dogFox from "@/assets/dog-fox.png";
+import dogDoberman from "@/assets/dog-doberman.png";
+import dogRott from "@/assets/dog-rott.png";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -212,14 +213,7 @@ function Hero() {
             </a>
           </div>
         </div>
-        <div className="relative">
-          <div className="absolute -inset-6 bg-primary/40 rounded-[3rem] -rotate-3 ink-border" aria-hidden />
-          <img
-            src={mascot}
-            alt="Mascote Pit Stop do Cusco"
-            className="relative w-full max-w-md mx-auto animate-wag drop-shadow-xl"
-          />
-        </div>
+        <HeroCarousel />
       </div>
     </section>
   );
