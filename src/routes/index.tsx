@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import logo from "@/assets/logo.png";
-import mascot from "@/assets/mascot.png";
+
 import dogCaramelo from "@/assets/dog-caramelo.png";
 import dogGolden from "@/assets/dog-golden.png";
 import dogFox from "@/assets/dog-fox.png";
