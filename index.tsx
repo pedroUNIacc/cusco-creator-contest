@@ -150,12 +150,19 @@ function useAuth() {
 
 function Index() {
   const auth = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+
   return (
     <div className="min-h-screen text-foreground">
-      <Header user={auth.user} onLogout={auth.logout} />
+      <Header user={auth.user} onLogout={auth.logout} onLogin={() => setShowLogin(true)} />
       <main>
         <Hero />
-        <Simulator auth={auth} />
+        <Simulator
+          auth={auth}
+          showLogin={showLogin}
+          onRequestLogin={() => setShowLogin(true)}
+          onCloseLogin={() => setShowLogin(false)}
+        />
         <Caocurso />
         <WhereWeAre />
       </main>
@@ -164,7 +171,7 @@ function Index() {
   );
 }
 
-function Header({ user, onLogout }: { user: User | null; onLogout: () => void }) {
+function Header({ user, onLogout, onLogin }: { user: User | null; onLogout: () => void; onLogin: () => void }) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 ink-border border-t-0 border-x-0">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
@@ -191,7 +198,14 @@ function Header({ user, onLogout }: { user: User | null; onLogout: () => void })
                 Sair
               </button>
             </>
-          ) : null}
+          ) : (
+            <button
+              onClick={onLogin}
+              className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-accent text-accent-foreground"
+            >
+              Entrar
+            </button>
+          )}
           <a
             href="#simulador"
             className="sm:hidden bg-accent text-accent-foreground font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm text-sm"
@@ -285,14 +299,23 @@ function HeroCarousel() {
 
 /* ---------------- SIMULATOR ---------------- */
 
-function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
+function Simulator({
+  auth,
+  showLogin,
+  onRequestLogin,
+  onCloseLogin,
+}: {
+  auth: ReturnType<typeof useAuth>;
+  showLogin: boolean;
+  onRequestLogin: () => void;
+  onCloseLogin: () => void;
+}) {
   const [breedId, setBreedId] = useState<string>("fox");
   const [selectedComplements, setSelectedComplements] = useState<string[]>([]);
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
   const [joinContest, setJoinContest] = useState(false);
   const [done, setDone] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [showPetCard, setShowPetCard] = useState(false);
 
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
@@ -319,7 +342,7 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
     setDone(true);
     if (joinContest) {
       if (auth.user) setShowPetCard(true);
-      else setShowLogin(true);
+      else onRequestLogin();
     }
   }
 
@@ -444,6 +467,41 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
                 />
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
               </div>
+
+              <div className="mt-6 rounded-3xl bg-background/5 p-4 border border-background/50">
+                <p className="font-bold">Escolha seus complementos</p>
+                {complementCount > 0 ? (
+                  <>
+                    <p className="text-xs opacity-80 mt-1">Marque até {complementCount} complemento{complementCount > 1 ? "s" : ""}.</p>
+                    <div className="mt-3 grid gap-2">
+                      {COMPLEMENTS.map((option) => {
+                        const selected = selectedComplements.includes(option);
+                        const disabled = !selected && selectedComplements.length >= complementCount;
+                        return (
+                          <label
+                            key={option}
+                            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
+                              selected ? "border-primary bg-primary/10" : "border-border bg-background"
+                            } ${disabled ? "opacity-60 cursor-not-allowed" : "hover:border-accent"}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              disabled={disabled}
+                              onChange={() => toggleComplement(option)}
+                              className="h-4 w-4 accent-primary cursor-pointer"
+                            />
+                            <span className="text-sm font-medium">{option}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm opacity-80">Este cusco não permite complementos opcionais.</p>
+                )}
+              </div>
+
               <div className="mt-4 pt-4 border-t border-background/30 flex justify-between items-baseline">
                 <span className="font-display">Total</span>
                 <span className="font-display text-3xl font-bold text-primary">R$ {total},00</span>
@@ -502,10 +560,10 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
 
       {showLogin && (
         <LoginModal
-          onClose={() => setShowLogin(false)}
+          onClose={onCloseLogin}
           onSuccess={(u) => {
             auth.login(u);
-            setShowLogin(false);
+            onCloseLogin();
             setShowPetCard(true);
           }}
         />
