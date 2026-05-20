@@ -271,6 +271,7 @@ function HeroCarousel() {
       </div>
     </div>
   );
+}
 
 /* ---------------- SIMULATOR ---------------- */
 
