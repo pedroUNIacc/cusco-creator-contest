@@ -463,6 +463,17 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
               </div>
               <div className="mt-4 text-sm space-y-1.5 opacity-90">
                 <Row label={breed.name} value={`R$ ${breed.price},00`} />
+                <Row
+                  label="Complementos"
+                  value={
+                    complements.length
+                      ? complements
+                          .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")
+                      : "—"
+                  }
+                />
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
               </div>
               <div className="mt-4 pt-4 border-t border-background/30 flex justify-between items-baseline">
