@@ -42,6 +42,7 @@ type Breed = {
   price: number;
   img: string;
   vibe: string;
+  maxComplements: number;
 };
 
 const BREEDS: Breed[] = [
@@ -53,6 +54,7 @@ const BREEDS: Breed[] = [
     price: 5,
     img: dogCaramelo,
     vibe: "Pra quem é fiel ao básico bom.",
+    maxComplements: 1,
   },
   {
     id: "golden",
@@ -62,6 +64,7 @@ const BREEDS: Breed[] = [
     price: 7,
     img: dogGolden,
     vibe: "Dobrou na salsicha, dobrou no amor.",
+    maxComplements: 1,
   },
   {
     id: "fox",
@@ -71,6 +74,7 @@ const BREEDS: Breed[] = [
     price: 10,
     img: dogFox,
     vibe: "Recheado até o último latido.",
+    maxComplements: 5,
   },
   {
     id: "doberman",
@@ -80,6 +84,7 @@ const BREEDS: Breed[] = [
     price: 12,
     img: dogDoberman,
     vibe: "Pra fome braba.",
+    maxComplements: 5,
   },
   {
     id: "rottweiler",
@@ -89,7 +94,19 @@ const BREEDS: Breed[] = [
     price: 15,
     img: dogRott,
     vibe: "Late forte, come mais forte ainda.",
+    maxComplements: 5,
   },
+];
+
+const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
+  { id: "batata", name: "Batata palha", emoji: "🥔" },
+  { id: "milho", name: "Milho", emoji: "🌽" },
+  { id: "ervilha", name: "Ervilha", emoji: "🟢" },
+  { id: "queijo", name: "Queijo ralado", emoji: "🧀" },
+  { id: "cebola", name: "Cebola crispy", emoji: "🧅" },
+  { id: "bacon", name: "Bacon", emoji: "🥓" },
+  { id: "catupiry", name: "Catupiry", emoji: "🥣" },
+  { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
 const MOCK_PETS = [
@@ -134,9 +151,14 @@ function useAuth() {
 
 function Index() {
   const auth = useAuth();
+  const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
     <div className="min-h-screen text-foreground">
-      <Header user={auth.user} onLogout={auth.logout} />
+      <Header
+        user={auth.user}
+        onLogout={auth.logout}
+        onLoginClick={() => setShowHeaderLogin(true)}
+      />
       <main>
         <Hero />
         <Simulator auth={auth} />
@@ -144,11 +166,28 @@ function Index() {
         <WhereWeAre />
       </main>
       <Footer />
+      {showHeaderLogin && (
+        <LoginModal
+          onClose={() => setShowHeaderLogin(false)}
+          onSuccess={(u) => {
+            auth.login(u);
+            setShowHeaderLogin(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function Header({ user, onLogout }: { user: User | null; onLogout: () => void }) {
+function Header({
+  user,
+  onLogout,
+  onLoginClick,
+}: {
+  user: User | null;
+  onLogout: () => void;
+  onLoginClick: () => void;
+}) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 ink-border border-t-0 border-x-0">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
@@ -170,12 +209,19 @@ function Header({ user, onLogout }: { user: User | null; onLogout: () => void })
               <span className="hidden sm:inline text-sm font-bold">Olá, {user.name.split(" ")[0]} 🐾</span>
               <button
                 onClick={onLogout}
-                className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-background"
+                className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-background cursor-pointer"
               >
                 Sair
               </button>
             </>
-          ) : null}
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="text-sm font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm bg-background hover:bg-primary transition cursor-pointer"
+            >
+              Entrar 🐾
+            </button>
+          )}
           <a
             href="#simulador"
             className="sm:hidden bg-accent text-accent-foreground font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm text-sm"
@@ -277,9 +323,23 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [done, setDone] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showPetCard, setShowPetCard] = useState(false);
+  const [complements, setComplements] = useState<string[]>([]);
 
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
   const total = breed.price + (drink ? 1 : 0);
+
+  // Reset complements when breed changes (different max)
+  useEffect(() => {
+    setComplements([]);
+  }, [breedId]);
+
+  function toggleComplement(id: string) {
+    setComplements((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= breed.maxComplements) return prev;
+      return [...prev, id];
+    });
+  }
 
   function handleAdopt() {
     setDone(true);
@@ -331,7 +391,49 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
               </div>
 
               <div className="mt-7">
-                <StepHeader n={2} title="Quer um refri pra acompanhar?" />
+                <StepHeader n={2} title="Escolha os complementos" />
+                <p className="mt-2 text-sm text-foreground/70">
+                  Pode marcar até <strong>{breed.maxComplements}</strong>{" "}
+                  {breed.maxComplements === 1 ? "complemento" : "complementos"} no{" "}
+                  <strong>{breed.name}</strong>. Selecionados:{" "}
+                  <strong>
+                    {complements.length}/{breed.maxComplements}
+                  </strong>
+                </p>
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {COMPLEMENTS.map((c) => {
+                    const checked = complements.includes(c.id);
+                    const disabled = !checked && complements.length >= breed.maxComplements;
+                    return (
+                      <label
+                        key={c.id}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${
+                          checked
+                            ? "bg-accent text-accent-foreground chunky-shadow-sm"
+                            : disabled
+                              ? "bg-muted opacity-50 cursor-not-allowed"
+                              : "bg-background hover:bg-primary/30 cursor-pointer"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => toggleComplement(c.id)}
+                          className="h-4 w-4 accent-accent cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <span className="text-base leading-none">{c.emoji}</span>
+                        <span className="text-sm font-bold leading-tight">{c.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
+              <div className="mt-7">
+                <StepHeader n={3} title="Quer um refri pra acompanhar?" />
                 <button
                   onClick={() => setDrink((d) => !d)}
                   className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${
@@ -361,6 +463,17 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
               </div>
               <div className="mt-4 text-sm space-y-1.5 opacity-90">
                 <Row label={breed.name} value={`R$ ${breed.price},00`} />
+                <Row
+                  label="Complementos"
+                  value={
+                    complements.length
+                      ? complements
+                          .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")
+                      : "—"
+                  }
+                />
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
               </div>
               <div className="mt-4 pt-4 border-t border-background/30 flex justify-between items-baseline">
