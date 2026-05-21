@@ -391,6 +391,48 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
               </div>
 
               <div className="mt-7">
+                <StepHeader n={2} title="Escolha os complementos" />
+                <p className="mt-2 text-sm text-foreground/70">
+                  Pode marcar até <strong>{breed.maxComplements}</strong>{" "}
+                  {breed.maxComplements === 1 ? "complemento" : "complementos"} no{" "}
+                  <strong>{breed.name}</strong>. Selecionados:{" "}
+                  <strong>
+                    {complements.length}/{breed.maxComplements}
+                  </strong>
+                </p>
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {COMPLEMENTS.map((c) => {
+                    const checked = complements.includes(c.id);
+                    const disabled = !checked && complements.length >= breed.maxComplements;
+                    return (
+                      <label
+                        key={c.id}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${
+                          checked
+                            ? "bg-accent text-accent-foreground chunky-shadow-sm"
+                            : disabled
+                              ? "bg-muted opacity-50 cursor-not-allowed"
+                              : "bg-background hover:bg-primary/30 cursor-pointer"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => toggleComplement(c.id)}
+                          className="h-4 w-4 accent-accent cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <span className="text-base leading-none">{c.emoji}</span>
+                        <span className="text-sm font-bold leading-tight">{c.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+
+              <div className="mt-7">
                 <StepHeader n={2} title="Quer um refri pra acompanhar?" />
                 <button
                   onClick={() => setDrink((d) => !d)}
