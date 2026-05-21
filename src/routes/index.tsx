@@ -753,26 +753,49 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
     const f = e.target.files?.[0];
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => setPhoto(String(reader.result));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // Resize to max 512px so it fits in localStorage
+        const MAX = 512;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return setPhoto(String(reader.result));
+        ctx.drawImage(img, 0, 0, w, h);
+        setPhoto(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.src = String(reader.result);
+    };
     reader.readAsDataURL(f);
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!petName.trim() || !photo) return;
+    const pet = {
+      id: Date.now(),
+      name: petName.trim(),
+      owner: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
+      photo,
+      votes: 0,
+      createdAt: new Date().toISOString(),
+    };
     try {
       const raw = localStorage.getItem("pitstop_pets");
       const list = raw ? JSON.parse(raw) : [];
-      list.push({
-        id: Date.now(),
-        name: petName.trim(),
-        owner: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
-        photo,
-        votes: 0,
-        createdAt: new Date().toISOString(),
-      });
+      list.push(pet);
       localStorage.setItem("pitstop_pets", JSON.stringify(list));
-    } catch {}
+      window.dispatchEvent(new CustomEvent("pitstop_pets_updated"));
+    } catch (err) {
+      console.error("Falha ao salvar pet no storage", err);
+      alert("Não consegui salvar a foto (muito grande). Tenta uma menor.");
+      return;
+    }
     setSubmitted(true);
     setTimeout(onDone, 2000);
   }
