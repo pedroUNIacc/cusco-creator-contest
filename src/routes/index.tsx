@@ -323,9 +323,23 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [done, setDone] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showPetCard, setShowPetCard] = useState(false);
+  const [complements, setComplements] = useState<string[]>([]);
 
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
   const total = breed.price + (drink ? 1 : 0);
+
+  // Reset complements when breed changes (different max)
+  useEffect(() => {
+    setComplements([]);
+  }, [breedId]);
+
+  function toggleComplement(id: string) {
+    setComplements((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= breed.maxComplements) return prev;
+      return [...prev, id];
+    });
+  }
 
   function handleAdopt() {
     setDone(true);
