@@ -874,11 +874,20 @@ function Caocurso() {
   const [voted, setVoted] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("pitstop_pets");
-      const stored: Pet[] = raw ? JSON.parse(raw) : [];
-      setPets([...stored, ...MOCK_PETS]);
-    } catch {}
+    const load = () => {
+      try {
+        const raw = localStorage.getItem("pitstop_pets");
+        const stored: Pet[] = raw ? JSON.parse(raw) : [];
+        setPets([...stored, ...MOCK_PETS]);
+      } catch {}
+    };
+    load();
+    window.addEventListener("pitstop_pets_updated", load);
+    window.addEventListener("storage", load);
+    return () => {
+      window.removeEventListener("pitstop_pets_updated", load);
+      window.removeEventListener("storage", load);
+    };
   }, []);
 
   const sorted = [...pets].sort((a, b) => b.votes - a.votes);
