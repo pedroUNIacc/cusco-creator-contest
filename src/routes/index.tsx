@@ -151,9 +151,14 @@ function useAuth() {
 
 function Index() {
   const auth = useAuth();
+  const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
     <div className="min-h-screen text-foreground">
-      <Header user={auth.user} onLogout={auth.logout} />
+      <Header
+        user={auth.user}
+        onLogout={auth.logout}
+        onLoginClick={() => setShowHeaderLogin(true)}
+      />
       <main>
         <Hero />
         <Simulator auth={auth} />
@@ -161,11 +166,28 @@ function Index() {
         <WhereWeAre />
       </main>
       <Footer />
+      {showHeaderLogin && (
+        <LoginModal
+          onClose={() => setShowHeaderLogin(false)}
+          onSuccess={(u) => {
+            auth.login(u);
+            setShowHeaderLogin(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function Header({ user, onLogout }: { user: User | null; onLogout: () => void }) {
+function Header({
+  user,
+  onLogout,
+  onLoginClick,
+}: {
+  user: User | null;
+  onLogout: () => void;
+  onLoginClick: () => void;
+}) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/80 ink-border border-t-0 border-x-0">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
