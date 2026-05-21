@@ -433,7 +433,7 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
 
 
               <div className="mt-7">
-                <StepHeader n={2} title="Quer um refri pra acompanhar?" />
+                <StepHeader n={3} title="Quer um refri pra acompanhar?" />
                 <button
                   onClick={() => setDrink((d) => !d)}
                   className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${
