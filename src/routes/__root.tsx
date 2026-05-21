@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Pit Stop do Cusco" },
+      { name: "description", content: "Cachorro quente do cusco | melhor do RS" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Pit Stop do Cusco" },
+      { property: "og:description", content: "Cachorro quente do cusco | melhor do RS" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Pit Stop do Cusco" },
+      { name: "twitter:description", content: "Cachorro quente do cusco | melhor do RS" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60d7568e-8972-453d-8855-cfe1ce6867c5/id-preview-ac311e56--6bbc7818-c758-40fd-bdfa-7b498226a43b.lovable.app-1779322557669.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60d7568e-8972-453d-8855-cfe1ce6867c5/id-preview-ac311e56--6bbc7818-c758-40fd-bdfa-7b498226a43b.lovable.app-1779322557669.png" },
     ],
     links: [
       {
