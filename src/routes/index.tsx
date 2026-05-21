@@ -209,12 +209,19 @@ function Header({
               <span className="hidden sm:inline text-sm font-bold">Olá, {user.name.split(" ")[0]} 🐾</span>
               <button
                 onClick={onLogout}
-                className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-background"
+                className="text-xs font-bold px-3 py-2 rounded-full ink-border chunky-shadow-sm bg-background cursor-pointer"
               >
                 Sair
               </button>
             </>
-          ) : null}
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="text-sm font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm bg-background hover:bg-primary transition cursor-pointer"
+            >
+              Entrar 🐾
+            </button>
+          )}
           <a
             href="#simulador"
             className="sm:hidden bg-accent text-accent-foreground font-bold px-4 py-2 rounded-full ink-border chunky-shadow-sm text-sm"
