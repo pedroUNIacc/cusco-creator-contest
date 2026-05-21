@@ -42,6 +42,7 @@ type Breed = {
   price: number;
   img: string;
   vibe: string;
+  maxComplements: number;
 };
 
 const BREEDS: Breed[] = [
@@ -53,6 +54,7 @@ const BREEDS: Breed[] = [
     price: 5,
     img: dogCaramelo,
     vibe: "Pra quem é fiel ao básico bom.",
+    maxComplements: 1,
   },
   {
     id: "golden",
@@ -62,6 +64,7 @@ const BREEDS: Breed[] = [
     price: 7,
     img: dogGolden,
     vibe: "Dobrou na salsicha, dobrou no amor.",
+    maxComplements: 1,
   },
   {
     id: "fox",
@@ -71,6 +74,7 @@ const BREEDS: Breed[] = [
     price: 10,
     img: dogFox,
     vibe: "Recheado até o último latido.",
+    maxComplements: 5,
   },
   {
     id: "doberman",
@@ -80,6 +84,7 @@ const BREEDS: Breed[] = [
     price: 12,
     img: dogDoberman,
     vibe: "Pra fome braba.",
+    maxComplements: 5,
   },
   {
     id: "rottweiler",
@@ -89,7 +94,19 @@ const BREEDS: Breed[] = [
     price: 15,
     img: dogRott,
     vibe: "Late forte, come mais forte ainda.",
+    maxComplements: 5,
   },
+];
+
+const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
+  { id: "batata", name: "Batata palha", emoji: "🥔" },
+  { id: "milho", name: "Milho", emoji: "🌽" },
+  { id: "ervilha", name: "Ervilha", emoji: "🟢" },
+  { id: "queijo", name: "Queijo ralado", emoji: "🧀" },
+  { id: "cebola", name: "Cebola crispy", emoji: "🧅" },
+  { id: "bacon", name: "Bacon", emoji: "🥓" },
+  { id: "catupiry", name: "Catupiry", emoji: "🥣" },
+  { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
 const MOCK_PETS = [
