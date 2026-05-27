@@ -109,14 +109,17 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
-const MOCK_PETS = [
-  { id: 1, name: "Pingo", owner: "@anaclara", votes: 142, emoji: "🐶" },
-  { id: 2, name: "Biscoito", owner: "@thiagop", votes: 121, emoji: "🐕" },
-  { id: 3, name: "Mel", owner: "@jujubaa", votes: 98, emoji: "🐾" },
-  { id: 4, name: "Thor", owner: "@rafael", votes: 76, emoji: "🦴" },
-  { id: 5, name: "Nina", owner: "@camis", votes: 64, emoji: "🐩" },
-  { id: 6, name: "Bento", owner: "@lulu", votes: 51, emoji: "🐕‍🦺" },
+const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
+  { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 5, desc: "Resgate uma latinha gelada no balcão." },
+  { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 8, desc: "Topping crocante por conta da casa." },
+  { id: "salsicha", name: "Salsicha extra", emoji: "🌭", cost: 12, desc: "Dobra a pegada do teu próximo cusco." },
+  { id: "caramelo", name: "Hot dog Caramelo", emoji: "🐶", cost: 25, desc: "Um Caramelo inteirinho de cortesia." },
+  { id: "golden", name: "Hot dog Golden", emoji: "🦴", cost: 35, desc: "Dose dupla de salsicha, dose dupla de amor." },
+  { id: "fox", name: "Hot dog FoxPaulistinha", emoji: "🐕", cost: 50, desc: "Recheado até o último latido." },
+  { id: "doberman", name: "Hot dog Doberman", emoji: "🐕‍🦺", cost: 60, desc: "Pra fome braba, sem economizar." },
+  { id: "rott", name: "Combo Rottweiler + Refri", emoji: "👑", cost: 80, desc: "O top da matilha + refri pra fechar." },
 ];
+
 
 /* ---------------- AUTH (localStorage) ---------------- */
 
@@ -149,6 +152,71 @@ function useAuth() {
   return { user, login, logout };
 }
 
+/* ---------------- CUSCO CLAN (pontos) ---------------- */
+
+const POINTS_EVENT = "pitstop_points_updated";
+function pointsKey(email: string) {
+  return `pitstop_points_${email.toLowerCase()}`;
+}
+function redemptionsKey(email: string) {
+  return `pitstop_redemptions_${email.toLowerCase()}`;
+}
+function getPoints(email: string): number {
+  if (typeof window === "undefined") return 0;
+  const raw = localStorage.getItem(pointsKey(email));
+  return raw ? Number(raw) || 0 : 0;
+}
+function addPoints(email: string, amount: number) {
+  const next = getPoints(email) + amount;
+  localStorage.setItem(pointsKey(email), String(next));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+  return next;
+}
+function spendPoints(email: string, amount: number): boolean {
+  const cur = getPoints(email);
+  if (cur < amount) return false;
+  localStorage.setItem(pointsKey(email), String(cur - amount));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+  return true;
+}
+type Redemption = { id: string; reward: string; cost: number; code: string; at: string };
+function addRedemption(email: string, r: Redemption) {
+  const raw = localStorage.getItem(redemptionsKey(email));
+  const list: Redemption[] = raw ? JSON.parse(raw) : [];
+  list.unshift(r);
+  localStorage.setItem(redemptionsKey(email), JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+}
+function getRedemptions(email: string): Redemption[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(redemptionsKey(email));
+  return raw ? JSON.parse(raw) : [];
+}
+function usePoints(email: string | undefined) {
+  const [points, setPoints] = useState(0);
+  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  useEffect(() => {
+    if (!email) {
+      setPoints(0);
+      setRedemptions([]);
+      return;
+    }
+    const sync = () => {
+      setPoints(getPoints(email));
+      setRedemptions(getRedemptions(email));
+    };
+    sync();
+    window.addEventListener(POINTS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(POINTS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [email]);
+  return { points, redemptions };
+}
+
+
 function Index() {
   const auth = useAuth();
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
@@ -163,8 +231,10 @@ function Index() {
         <Hero />
         <Simulator auth={auth} />
         <Caocurso />
+        <CuscoClan auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <WhereWeAre />
       </main>
+
       <Footer />
       {showHeaderLogin && (
         <LoginModal
@@ -201,6 +271,7 @@ function Header({
         <nav className="hidden sm:flex items-center gap-1 text-sm font-bold">
           <a href="#simulador" className="px-3 py-2 rounded-full hover:bg-primary transition">🌭 Adote seu Cusco</a>
           <a href="#caocurso" className="px-3 py-2 rounded-full hover:bg-primary transition">🏆 Cãocurso</a>
+          <a href="#cuscoclan" className="px-3 py-2 rounded-full hover:bg-primary transition">🦴 Cusco Clan</a>
           <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
         </nav>
         <div className="flex items-center gap-2">
@@ -343,11 +414,13 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
 
   function handleAdopt() {
     setDone(true);
+    if (auth.user) addPoints(auth.user.email, total);
     if (joinContest) {
       if (auth.user) setShowPetCard(true);
       else setShowLogin(true);
     }
   }
+
 
   return (
     <section id="simulador" className="py-16 sm:py-24">
@@ -870,7 +943,7 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
 type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
 
 function Caocurso() {
-  const [pets, setPets] = useState<Pet[]>(MOCK_PETS);
+  const [pets, setPets] = useState<Pet[]>([]);
   const [voted, setVoted] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -878,7 +951,7 @@ function Caocurso() {
       try {
         const raw = localStorage.getItem("pitstop_pets");
         const stored: Pet[] = raw ? JSON.parse(raw) : [];
-        setPets([...stored, ...MOCK_PETS]);
+        setPets(stored);
       } catch {}
     };
     load();
@@ -898,6 +971,7 @@ function Caocurso() {
     setVoted((s) => new Set(s).add(id));
   }
 
+
   return (
     <section id="caocurso" className="py-16 sm:py-24 bg-primary/40 ink-border border-x-0">
       <div className="mx-auto max-w-6xl px-4">
@@ -907,48 +981,199 @@ function Caocurso() {
           subtitle="O cusco mais latido leva uma cesta cheia de mimos. Vote no seu favorito — pra inscrever o teu, marca a opção ao adotar seu cusco lá em cima!"
         />
 
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {sorted.map((p, i) => {
-            const leader = i === 0;
-            const hasVoted = voted.has(p.id);
-            return (
-              <article
-                key={p.id}
-                className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
-              >
-                {leader && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
-                    👑 LÍDER DA MATILHA
-                  </span>
-                )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
-                  {p.photo ? (
-                    <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 grid place-items-center text-7xl">
-                      <span>{p.emoji}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-4 flex items-baseline justify-between">
-                  <div>
-                    <h3 className="font-display text-2xl font-bold">{p.name}</h3>
-                    <p className="text-sm text-muted-foreground">{p.owner}</p>
-                  </div>
-                  <span className="font-display text-xl font-bold">{p.votes}</span>
-                </div>
-                <button
-                  onClick={() => vote(p.id)}
-                  disabled={hasVoted}
-                  className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
-                    hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
-                  }`}
+        {sorted.length === 0 ? (
+          <div className="mt-10 max-w-xl mx-auto bg-card rounded-3xl ink-border chunky-shadow-sm p-8 text-center">
+            <div className="text-5xl">🐾</div>
+            <p className="mt-3 font-display text-2xl font-bold">A matilha tá vazia… por enquanto.</p>
+            <p className="mt-2 text-foreground/70 text-sm">
+              Seja o primeiro a inscrever um cusco! Vai em <strong>Adote seu Cusco</strong>, marca a opção do Cãocurso e manda a foto do teu campeão.
+            </p>
+            <a
+              href="#simulador"
+              className="mt-5 inline-block bg-primary text-primary-foreground font-bold px-5 py-3 rounded-full ink-border chunky-shadow"
+            >
+              Inscrever meu cusco 🐶
+            </a>
+          </div>
+        ) : (
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sorted.map((p, i) => {
+              const leader = i === 0;
+              const hasVoted = voted.has(p.id);
+              return (
+                <article
+                  key={p.id}
+                  className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
                 >
-                  {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
+                  {leader && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
+                      👑 LÍDER DA MATILHA
+                    </span>
+                  )}
+                  <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
+                    {p.photo ? (
+                      <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 grid place-items-center text-7xl">
+                        <span>{p.emoji}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-baseline justify-between">
+                    <div>
+                      <h3 className="font-display text-2xl font-bold">{p.name}</h3>
+                      <p className="text-sm text-muted-foreground">{p.owner}</p>
+                    </div>
+                    <span className="font-display text-xl font-bold">{p.votes}</span>
+                  </div>
+                  <button
+                    onClick={() => vote(p.id)}
+                    disabled={hasVoted}
+                    className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
+                      hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+                    }`}
+                  >
+                    {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- CUSCO CLAN SECTION ---------------- */
+
+function CuscoClan({
+  auth,
+  onLoginClick,
+}: {
+  auth: ReturnType<typeof useAuth>;
+  onLoginClick: () => void;
+}) {
+  const email = auth.user?.email;
+  const { points, redemptions } = usePoints(email);
+  const [flash, setFlash] = useState<string | null>(null);
+
+  function redeem(rewardId: string) {
+    if (!auth.user) return onLoginClick();
+    const r = REWARDS.find((x) => x.id === rewardId);
+    if (!r) return;
+    if (!spendPoints(auth.user.email, r.cost)) {
+      setFlash(`Faltam ${r.cost - points} pontos pra ${r.name}. Continua latindo! 🐾`);
+      setTimeout(() => setFlash(null), 3500);
+      return;
+    }
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    addRedemption(auth.user.email, {
+      id: `${Date.now()}`,
+      reward: r.name,
+      cost: r.cost,
+      code,
+      at: new Date().toISOString(),
+    });
+    setFlash(`🎉 Resgatado! Mostra o código #${code} no balcão pra retirar: ${r.name}.`);
+    setTimeout(() => setFlash(null), 6000);
+  }
+
+  return (
+    <section id="cuscoclan" className="py-16 sm:py-24 bg-bun ink-border border-x-0">
+      <div className="mx-auto max-w-6xl px-4">
+        <SectionTitle
+          kicker="PROGRAMA DE PONTOS"
+          title="Cusco Clan 🦴"
+          subtitle="A cada R$ 1 gasto no Pit Stop, teu cusco ganha 1 ponto. Troca por mimos da casa quando juntar a matilha."
+        />
+
+        <div className="mt-10 grid lg:grid-cols-[320px_1fr] gap-6 items-start">
+          {/* Wallet */}
+          <aside className="bg-ink text-background rounded-3xl ink-border chunky-shadow p-6 lg:sticky lg:top-24" style={{ background: "var(--ink)" }}>
+            {auth.user ? (
+              <>
+                <div className="text-xs font-bold opacity-70 tracking-widest">SUA MATILHA</div>
+                <div className="mt-1 font-display text-2xl font-bold">Olá, {auth.user.name.split(" ")[0]} 🐾</div>
+                <div className="mt-6 bg-primary text-primary-foreground rounded-2xl ink-border p-5 text-center">
+                  <div className="text-xs font-bold tracking-widest">SALDO DE OSSINHOS</div>
+                  <div className="mt-1 font-display text-5xl font-bold">{points}</div>
+                  <div className="text-xs mt-1 opacity-80">pontos disponíveis</div>
+                </div>
+                <p className="mt-4 text-xs opacity-80">
+                  💡 Cada adoção de cusco te dá pontos igual ao valor do pedido. Acumula e troca aí embaixo.
+                </p>
+                {redemptions.length > 0 && (
+                  <div className="mt-5">
+                    <div className="text-xs font-bold opacity-70 tracking-widest">RESGATES RECENTES</div>
+                    <ul className="mt-2 space-y-2">
+                      {redemptions.slice(0, 3).map((r) => (
+                        <li key={r.id} className="text-xs bg-background/10 rounded-xl p-2.5">
+                          <div className="font-bold">{r.reward}</div>
+                          <div className="opacity-70">Código <strong>#{r.code}</strong> · {r.cost} pts</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="text-5xl">🐕</div>
+                <p className="mt-3 font-display text-xl font-bold">Entra na matilha</p>
+                <p className="mt-2 text-sm opacity-80">
+                  Faz login pra começar a juntar ossinhos a cada compra e trocar por mimos.
+                </p>
+                <button
+                  onClick={onLoginClick}
+                  className="mt-5 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow cursor-pointer"
+                >
+                  Entrar 🐾
                 </button>
-              </article>
-            );
-          })}
+              </div>
+            )}
+          </aside>
+
+          {/* Rewards catalog */}
+          <div>
+            {flash && (
+              <div className="mb-5 bg-card rounded-2xl ink-border chunky-shadow-sm p-4 text-sm font-bold animate-pop">
+                {flash}
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {REWARDS.map((r) => {
+                const affordable = !!auth.user && points >= r.cost;
+                return (
+                  <article
+                    key={r.id}
+                    className={`bg-card rounded-3xl ink-border p-5 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
+                  >
+                    <div className="text-5xl">{r.emoji}</div>
+                    <h3 className="mt-3 font-display text-xl font-bold leading-tight">{r.name}</h3>
+                    <p className="mt-1 text-sm text-foreground/70 flex-1">{r.desc}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="font-display text-lg font-bold text-accent">{r.cost} pts</span>
+                      <button
+                        onClick={() => redeem(r.id)}
+                        disabled={!!auth.user && !affordable}
+                        className={`font-bold text-sm px-4 py-2 rounded-full ink-border chunky-shadow-sm transition cursor-pointer disabled:cursor-not-allowed ${
+                          !auth.user
+                            ? "bg-background hover:bg-primary/30"
+                            : affordable
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {!auth.user ? "Entrar pra trocar" : affordable ? "Trocar 🦴" : `Faltam ${r.cost - points}`}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>
