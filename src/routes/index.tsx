@@ -911,49 +911,66 @@ function Caocurso() {
           subtitle="O cusco mais latido leva uma cesta cheia de mimos. Vote no seu favorito — pra inscrever o teu, marca a opção ao adotar seu cusco lá em cima!"
         />
 
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {sorted.map((p, i) => {
-            const leader = i === 0;
-            const hasVoted = voted.has(p.id);
-            return (
-              <article
-                key={p.id}
-                className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
-              >
-                {leader && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
-                    👑 LÍDER DA MATILHA
-                  </span>
-                )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
-                  {p.photo ? (
-                    <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 grid place-items-center text-7xl">
-                      <span>{p.emoji}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-4 flex items-baseline justify-between">
-                  <div>
-                    <h3 className="font-display text-2xl font-bold">{p.name}</h3>
-                    <p className="text-sm text-muted-foreground">{p.owner}</p>
-                  </div>
-                  <span className="font-display text-xl font-bold">{p.votes}</span>
-                </div>
-                <button
-                  onClick={() => vote(p.id)}
-                  disabled={hasVoted}
-                  className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
-                    hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
-                  }`}
+        {sorted.length === 0 ? (
+          <div className="mt-10 max-w-xl mx-auto bg-card rounded-3xl ink-border chunky-shadow-sm p-8 text-center">
+            <div className="text-5xl">🐾</div>
+            <p className="mt-3 font-display text-2xl font-bold">A matilha tá vazia… por enquanto.</p>
+            <p className="mt-2 text-foreground/70 text-sm">
+              Seja o primeiro a inscrever um cusco! Vai em <strong>Adote seu Cusco</strong>, marca a opção do Cãocurso e manda a foto do teu campeão.
+            </p>
+            <a
+              href="#simulador"
+              className="mt-5 inline-block bg-primary text-primary-foreground font-bold px-5 py-3 rounded-full ink-border chunky-shadow"
+            >
+              Inscrever meu cusco 🐶
+            </a>
+          </div>
+        ) : (
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sorted.map((p, i) => {
+              const leader = i === 0;
+              const hasVoted = voted.has(p.id);
+              return (
+                <article
+                  key={p.id}
+                  className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
                 >
-                  {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
-                </button>
-              </article>
-            );
-          })}
-        </div>
+                  {leader && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
+                      👑 LÍDER DA MATILHA
+                    </span>
+                  )}
+                  <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
+                    {p.photo ? (
+                      <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0 grid place-items-center text-7xl">
+                        <span>{p.emoji}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-baseline justify-between">
+                    <div>
+                      <h3 className="font-display text-2xl font-bold">{p.name}</h3>
+                      <p className="text-sm text-muted-foreground">{p.owner}</p>
+                    </div>
+                    <span className="font-display text-xl font-bold">{p.votes}</span>
+                  </div>
+                  <button
+                    onClick={() => vote(p.id)}
+                    disabled={hasVoted}
+                    className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
+                      hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+                    }`}
+                  >
+                    {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </section>
   );
