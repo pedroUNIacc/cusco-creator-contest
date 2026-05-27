@@ -286,9 +286,8 @@ function HeroCarousel() {
               key={b.id}
               aria-label={`Ir para ${b.name}`}
               onClick={() => api?.scrollTo(i)}
-              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${
-                current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
-              }`}
+              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+                }`}
             />
           ))}
         </div>
@@ -367,9 +366,8 @@ function Simulator({
                     <button
                       key={b.id}
                       onClick={() => setBreedId(b.id)}
-                      className={`text-left rounded-2xl ink-border overflow-hidden transition transform ${
-                        selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
-                      }`}
+                      className={`text-left rounded-2xl ink-border overflow-hidden transition transform ${selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
+                        }`}
                     >
                       <div className="aspect-[16/10] overflow-hidden bg-bun">
                         <img src={b.img} alt={b.name} loading="lazy" className="w-full h-full object-cover" />
@@ -404,9 +402,8 @@ function Simulator({
                             type="button"
                             onClick={() => toggleComplement(option)}
                             disabled={disabled}
-                            className={`rounded-2xl border px-4 py-3 text-left transition ${
-                              selected ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"
-                            } ${disabled ? "opacity-60 cursor-not-allowed" : "hover:-translate-y-0.5"}`}
+                            className={`rounded-2xl border px-4 py-3 text-left transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"
+                              } ${disabled ? "opacity-60 cursor-not-allowed" : "hover:-translate-y-0.5"}`}
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold">{option}</span>
@@ -428,9 +425,8 @@ function Simulator({
                 <StepHeader n={3} title="Quer um refri pra acompanhar?" />
                 <button
                   onClick={() => setDrink((d) => !d)}
-                  className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${
-                    drink ? "bg-accent text-accent-foreground" : "bg-background"
-                  }`}
+                  className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${drink ? "bg-accent text-accent-foreground" : "bg-background"
+                    }`}
                 >
                   <span className={`h-6 w-11 rounded-full ink-border relative transition ${drink ? "bg-background" : "bg-muted"}`}>
                     <span
@@ -461,8 +457,8 @@ function Simulator({
                     selectedComplements.length > 0
                       ? selectedComplements.join(", ")
                       : complementCount > 0
-                      ? "Nenhum selecionado"
-                      : "Não disponível"
+                        ? "Nenhum selecionado"
+                        : "Não disponível"
                   }
                 />
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
@@ -480,9 +476,8 @@ function Simulator({
                         return (
                           <label
                             key={option}
-                            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
-                              selected ? "border-primary bg-primary/10" : "border-border bg-background"
-                            } ${disabled ? "opacity-60 cursor-not-allowed" : "hover:border-accent"}`}
+                            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${selected ? "border-primary bg-primary/10" : "border-border bg-background"
+                              } ${disabled ? "opacity-60 cursor-not-allowed" : "hover:border-accent"}`}
                           >
                             <input
                               type="checkbox"
@@ -648,7 +643,7 @@ function Certificate({
               onClick={() => {
                 const text = `Acabei de adotar um ${breed.name} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
                 if (navigator.share) {
-                  navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => {});
+                  navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => { });
                 } else {
                   navigator.clipboard?.writeText(text);
                   alert("Texto copiado! Cola nos seus Stories 🎉");
@@ -805,7 +800,7 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
         createdAt: new Date().toISOString(),
       });
       localStorage.setItem("pitstop_pets", JSON.stringify(list));
-    } catch {}
+    } catch { }
     setSubmitted(true);
     setTimeout(onDone, 2000);
   }
@@ -888,7 +883,7 @@ function Caocurso() {
       const raw = localStorage.getItem("pitstop_pets");
       const stored: Pet[] = raw ? JSON.parse(raw) : [];
       setPets([...stored, ...MOCK_PETS]);
-    } catch {}
+    } catch { }
   }, []);
 
   const sorted = [...pets].sort((a, b) => b.votes - a.votes);
@@ -939,9 +934,8 @@ function Caocurso() {
                 <button
                   onClick={() => vote(p.id)}
                   disabled={hasVoted}
-                  className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
-                    hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
-                  }`}
+                  className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+                    }`}
                 >
                   {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
                 </button>

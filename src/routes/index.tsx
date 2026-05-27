@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useScrollReveal, useScrollRevealWithDelay } from "@/hooks/use-scroll-reveal";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import logo from "@/assets/logo.png";
 
 import dogCaramelo from "@/assets/dog-caramelo.png";
@@ -230,7 +230,7 @@ function Index() {
       />
       <main>
         <Hero />
-        <Simulator auth={auth} />
+        <Simulator auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <Caocurso />
         <CuscoClan auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <WhereWeAre />
@@ -387,14 +387,13 @@ function HeroCarousel() {
 
 /* ---------------- SIMULATOR ---------------- */
 
-function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
+function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
   const [joinContest, setJoinContest] = useState(false);
   const [done, setDone] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [showPetCard, setShowPetCard] = useState(false);
   const [complements, setComplements] = useState<string[]>([]);
 
@@ -419,7 +418,7 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
     if (auth.user) addPoints(auth.user.email, total);
     if (joinContest) {
       if (auth.user) setShowPetCard(true);
-      else setShowLogin(true);
+      else onLoginClick();
     }
   }
 
@@ -439,15 +438,13 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
             <div className="bg-card rounded-3xl ink-border chunky-shadow p-5 sm:p-7">
               <StepHeader n={1} title="Escolha a raça" />
               <div className="mt-5 grid sm:grid-cols-2 gap-4">
-                {BREEDS.map((b, index) => {
+                {BREEDS.map((b) => {
                   const selected = b.id === breedId;
-                  const cardRef = useScrollRevealWithDelay<HTMLButtonElement>(index * 100, { threshold: 0.2 });
                   return (
                     <button
-                      ref={cardRef}
                       key={b.id}
                       onClick={() => setBreedId(b.id)}
-                      className={`scroll-reveal text-left rounded-2xl ink-border overflow-hidden transition transform ${selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
+                      className={`text-left rounded-2xl ink-border overflow-hidden transition transform ${selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
                         }`}
                     >
                       <div className="aspect-[16/10] overflow-hidden bg-bun">
@@ -477,15 +474,13 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
                   </strong>
                 </p>
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {COMPLEMENTS.map((c, index) => {
+                  {COMPLEMENTS.map((c) => {
                     const checked = complements.includes(c.id);
                     const disabled = !checked && complements.length >= breed.maxComplements;
-                    const itemRef = useScrollRevealWithDelay<HTMLLabelElement>(index * 50, { threshold: 0.5 });
                     return (
                       <label
-                        ref={itemRef}
                         key={c.id}
-                        className={`scroll-reveal flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${checked
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${checked
                           ? "bg-accent text-accent-foreground chunky-shadow-sm"
                           : disabled
                             ? "bg-muted opacity-50 cursor-not-allowed"
@@ -606,17 +601,6 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
           </>
         )}
       </div>
-
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSuccess={(u) => {
-            auth.login(u);
-            setShowLogin(false);
-            setShowPetCard(true);
-          }}
-        />
-      )}
     </section>
   );
 }
@@ -1004,12 +988,10 @@ function Caocurso() {
             {sorted.map((p, i) => {
               const leader = i === 0;
               const hasVoted = voted.has(p.id);
-              const cardRef = useScrollRevealWithDelay<HTMLElement>(i * 100, { threshold: 0.2 });
               return (
                 <article
-                  ref={cardRef}
                   key={p.id}
-                  className={`scroll-reveal relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
+                  className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
                 >
                   {leader && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
@@ -1149,14 +1131,12 @@ function CuscoClan({
               </div>
             )}
             <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-8">
-              {REWARDS.map((r, index) => {
+              {REWARDS.map((r) => {
                 const affordable = !!auth.user && points >= r.cost;
-                const cardRef = useScrollRevealWithDelay<HTMLElement>(index * 100, { threshold: 0.2 });
                 return (
                   <article
-                    ref={cardRef}
                     key={r.id}
-                    className={`scroll-reveal bg-card rounded-3xl ink-border p-7 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
+                    className={`bg-card rounded-3xl ink-border p-7 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
                   >
                     <div className="text-5xl">{r.emoji}</div>
                     <h3 className="mt-3 font-display text-xl font-bold leading-tight">{r.name}</h3>
