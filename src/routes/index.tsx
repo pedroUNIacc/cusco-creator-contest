@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useScrollReveal, useScrollRevealWithDelay } from "@/hooks/use-scroll-reveal";
 import logo from "@/assets/logo.png";
 
 import dogCaramelo from "@/assets/dog-caramelo.png";
@@ -110,14 +111,14 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
 ];
 
 const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
-  { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 5, desc: "Resgate uma latinha gelada no balcão." },
-  { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 8, desc: "Topping crocante por conta da casa." },
-  { id: "salsicha", name: "Salsicha extra", emoji: "🌭", cost: 12, desc: "Dobra a pegada do teu próximo cusco." },
-  { id: "caramelo", name: "Hot dog Caramelo", emoji: "🐶", cost: 25, desc: "Um Caramelo inteirinho de cortesia." },
-  { id: "golden", name: "Hot dog Golden", emoji: "🦴", cost: 35, desc: "Dose dupla de salsicha, dose dupla de amor." },
-  { id: "fox", name: "Hot dog FoxPaulistinha", emoji: "🐕", cost: 50, desc: "Recheado até o último latido." },
-  { id: "doberman", name: "Hot dog Doberman", emoji: "🐕‍🦺", cost: 60, desc: "Pra fome braba, sem economizar." },
-  { id: "rott", name: "Combo Rottweiler + Refri", emoji: "👑", cost: 80, desc: "O top da matilha + refri pra fechar." },
+  { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 15, desc: "Resgate uma latinha gelada no balcão." },
+  { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 24, desc: "Topping crocante por conta da casa." },
+  { id: "salsicha", name: "Salsicha extra", emoji: "🌭", cost: 36, desc: "Dobra a pegada do teu próximo cusco." },
+  { id: "caramelo", name: "Hot dog Caramelo", emoji: "🐶", cost: 75, desc: "Um Caramelo inteirinho de cortesia." },
+  { id: "golden", name: "Hot dog Golden", emoji: "🦴", cost: 105, desc: "Dose dupla de salsicha, dose dupla de amor." },
+  { id: "fox", name: "Hot dog FoxPaulistinha", emoji: "🐕", cost: 150, desc: "Recheado até o último latido." },
+  { id: "doberman", name: "Hot dog Doberman", emoji: "🐕‍🦺", cost: 180, desc: "Pra fome braba, sem economizar." },
+  { id: "rott", name: "Combo Rottweiler + Refri", emoji: "👑", cost: 240, desc: "O top da matilha + refri pra fechar." },
 ];
 
 
@@ -306,8 +307,9 @@ function Header({
 }
 
 function Hero() {
+  const scrollRef = useScrollReveal();
   return (
-    <section id="top" className="relative overflow-hidden">
+    <section ref={scrollRef} id="top" className="scroll-reveal relative overflow-hidden">
       <div className="absolute inset-0 paw-bg" aria-hidden />
       <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-14 sm:pt-16 sm:pb-20 grid md:grid-cols-2 gap-8 items-center">
         <div>
@@ -373,9 +375,8 @@ function HeroCarousel() {
               key={b.id}
               aria-label={`Ir para ${b.name}`}
               onClick={() => api?.scrollTo(i)}
-              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${
-                current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
-              }`}
+              className={`h-3 rounded-full ink-border transition-all cursor-pointer ${current === i ? "w-10 bg-accent" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+                }`}
             />
           ))}
         </div>
@@ -387,6 +388,7 @@ function HeroCarousel() {
 /* ---------------- SIMULATOR ---------------- */
 
 function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
+  const scrollRef = useScrollReveal();
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
@@ -423,7 +425,7 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
 
 
   return (
-    <section id="simulador" className="py-16 sm:py-24">
+    <section ref={scrollRef} id="simulador" className="scroll-reveal py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <SectionTitle
           kicker="PASSO A PASSO"
@@ -437,15 +439,16 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
             <div className="bg-card rounded-3xl ink-border chunky-shadow p-5 sm:p-7">
               <StepHeader n={1} title="Escolha a raça" />
               <div className="mt-5 grid sm:grid-cols-2 gap-4">
-                {BREEDS.map((b) => {
+                {BREEDS.map((b, index) => {
                   const selected = b.id === breedId;
+                  const cardRef = useScrollRevealWithDelay<HTMLButtonElement>(index * 100, { threshold: 0.2 });
                   return (
                     <button
+                      ref={cardRef}
                       key={b.id}
                       onClick={() => setBreedId(b.id)}
-                      className={`text-left rounded-2xl ink-border overflow-hidden transition transform ${
-                        selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
-                      }`}
+                      className={`scroll-reveal text-left rounded-2xl ink-border overflow-hidden transition transform ${selected ? "bg-primary chunky-shadow -translate-y-0.5" : "bg-background hover:-translate-y-0.5"
+                        }`}
                     >
                       <div className="aspect-[16/10] overflow-hidden bg-bun">
                         <img src={b.img} alt={b.name} loading="lazy" className="w-full h-full object-cover" />
@@ -474,19 +477,20 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
                   </strong>
                 </p>
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {COMPLEMENTS.map((c) => {
+                  {COMPLEMENTS.map((c, index) => {
                     const checked = complements.includes(c.id);
                     const disabled = !checked && complements.length >= breed.maxComplements;
+                    const itemRef = useScrollRevealWithDelay<HTMLLabelElement>(index * 50, { threshold: 0.5 });
                     return (
                       <label
+                        ref={itemRef}
                         key={c.id}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${
-                          checked
-                            ? "bg-accent text-accent-foreground chunky-shadow-sm"
-                            : disabled
-                              ? "bg-muted opacity-50 cursor-not-allowed"
-                              : "bg-background hover:bg-primary/30 cursor-pointer"
-                        }`}
+                        className={`scroll-reveal flex items-center gap-2 px-3 py-2.5 rounded-2xl ink-border transition select-none ${checked
+                          ? "bg-accent text-accent-foreground chunky-shadow-sm"
+                          : disabled
+                            ? "bg-muted opacity-50 cursor-not-allowed"
+                            : "bg-background hover:bg-primary/30 cursor-pointer"
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -509,9 +513,8 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
                 <StepHeader n={3} title="Quer um refri pra acompanhar?" />
                 <button
                   onClick={() => setDrink((d) => !d)}
-                  className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${
-                    drink ? "bg-accent text-accent-foreground" : "bg-background"
-                  }`}
+                  className={`mt-4 w-full sm:w-auto flex items-center gap-3 px-5 py-3 rounded-full ink-border chunky-shadow-sm font-bold ${drink ? "bg-accent text-accent-foreground" : "bg-background"
+                    }`}
                 >
                   <span className={`h-6 w-11 rounded-full ink-border relative transition ${drink ? "bg-background" : "bg-muted"}`}>
                     <span
@@ -541,9 +544,9 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
                   value={
                     complements.length
                       ? complements
-                          .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
-                          .filter(Boolean)
-                          .join(", ")
+                        .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
+                        .filter(Boolean)
+                        .join(", ")
                       : "—"
                   }
                 />
@@ -688,7 +691,7 @@ function Certificate({
               onClick={() => {
                 const text = `Acabei de adotar um ${breed.name} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
                 if (navigator.share) {
-                  navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => {});
+                  navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => { });
                 } else {
                   navigator.clipboard?.writeText(text);
                   alert("Texto copiado! Cola nos seus Stories 🎉");
@@ -943,6 +946,7 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
 type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
 
 function Caocurso() {
+  const scrollRef = useScrollReveal();
   const [pets, setPets] = useState<Pet[]>([]);
   const [voted, setVoted] = useState<Set<number>>(new Set());
 
@@ -952,7 +956,7 @@ function Caocurso() {
         const raw = localStorage.getItem("pitstop_pets");
         const stored: Pet[] = raw ? JSON.parse(raw) : [];
         setPets(stored);
-      } catch {}
+      } catch { }
     };
     load();
     window.addEventListener("pitstop_pets_updated", load);
@@ -973,7 +977,7 @@ function Caocurso() {
 
 
   return (
-    <section id="caocurso" className="py-16 sm:py-24 bg-primary/40 ink-border border-x-0">
+    <section ref={scrollRef} id="caocurso" className="scroll-reveal py-16 sm:py-24 bg-primary/40 ink-border border-x-0">
       <div className="mx-auto max-w-6xl px-4">
         <SectionTitle
           kicker="ENGAJAMENTO VIRAL"
@@ -1000,10 +1004,12 @@ function Caocurso() {
             {sorted.map((p, i) => {
               const leader = i === 0;
               const hasVoted = voted.has(p.id);
+              const cardRef = useScrollRevealWithDelay<HTMLElement>(i * 100, { threshold: 0.2 });
               return (
                 <article
+                  ref={cardRef}
                   key={p.id}
-                  className={`relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
+                  className={`scroll-reveal relative bg-card rounded-3xl ink-border p-5 ${leader ? "chunky-shadow ring-4 ring-accent/40" : "chunky-shadow-sm"}`}
                 >
                   {leader && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full ink-border">
@@ -1029,9 +1035,8 @@ function Caocurso() {
                   <button
                     onClick={() => vote(p.id)}
                     disabled={hasVoted}
-                    className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${
-                      hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
-                    }`}
+                    className={`mt-3 w-full font-bold py-2.5 rounded-full ink-border chunky-shadow-sm transition ${hasVoted ? "bg-muted text-muted-foreground" : "bg-accent text-accent-foreground"
+                      }`}
                   >
                     {hasVoted ? "Já latiu 🐾" : "Votar ❤️"}
                   </button>
@@ -1055,6 +1060,7 @@ function CuscoClan({
   auth: ReturnType<typeof useAuth>;
   onLoginClick: () => void;
 }) {
+  const scrollRef = useScrollReveal();
   const email = auth.user?.email;
   const { points, redemptions } = usePoints(email);
   const [flash, setFlash] = useState<string | null>(null);
@@ -1081,7 +1087,7 @@ function CuscoClan({
   }
 
   return (
-    <section id="cuscoclan" className="py-16 sm:py-24 bg-bun ink-border border-x-0">
+    <section ref={scrollRef} id="cuscoclan" className="scroll-reveal py-16 sm:py-24 bg-bun ink-border border-x-0">
       <div className="mx-auto max-w-6xl px-4">
         <SectionTitle
           kicker="PROGRAMA DE PONTOS"
@@ -1142,29 +1148,30 @@ function CuscoClan({
                 {flash}
               </div>
             )}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {REWARDS.map((r) => {
+            <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-8">
+              {REWARDS.map((r, index) => {
                 const affordable = !!auth.user && points >= r.cost;
+                const cardRef = useScrollRevealWithDelay<HTMLElement>(index * 100, { threshold: 0.2 });
                 return (
                   <article
+                    ref={cardRef}
                     key={r.id}
-                    className={`bg-card rounded-3xl ink-border p-5 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
+                    className={`scroll-reveal bg-card rounded-3xl ink-border p-7 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
                   >
                     <div className="text-5xl">{r.emoji}</div>
                     <h3 className="mt-3 font-display text-xl font-bold leading-tight">{r.name}</h3>
                     <p className="mt-1 text-sm text-foreground/70 flex-1">{r.desc}</p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="font-display text-lg font-bold text-accent">{r.cost} pts</span>
+                    <div className="mt-4 flex items-center gap-3 justify-between">
+                      <span className="font-display text-lg font-bold text-accent whitespace-nowrap">{r.cost} pts</span>
                       <button
                         onClick={() => redeem(r.id)}
                         disabled={!!auth.user && !affordable}
-                        className={`font-bold text-sm px-4 py-2 rounded-full ink-border chunky-shadow-sm transition cursor-pointer disabled:cursor-not-allowed ${
-                          !auth.user
-                            ? "bg-background hover:bg-primary/30"
-                            : affordable
-                              ? "bg-accent text-accent-foreground"
-                              : "bg-muted text-muted-foreground"
-                        }`}
+                        className={`font-bold text-sm px-4 py-2 rounded-full ink-border chunky-shadow-sm transition cursor-pointer disabled:cursor-not-allowed whitespace-nowrap ${!auth.user
+                          ? "bg-background hover:bg-primary/30"
+                          : affordable
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-muted text-muted-foreground"
+                          }`}
                       >
                         {!auth.user ? "Entrar pra trocar" : affordable ? "Trocar 🦴" : `Faltam ${r.cost - points}`}
                       </button>
@@ -1183,8 +1190,9 @@ function CuscoClan({
 /* ---------------- WHERE / FOOTER ---------------- */
 
 function WhereWeAre() {
+  const scrollRef = useScrollReveal();
   return (
-    <section id="onde" className="py-16 sm:py-24">
+    <section ref={scrollRef} id="onde" className="scroll-reveal py-16 sm:py-24">
       <div className="mx-auto max-w-4xl px-4 text-center">
         <SectionTitle kicker="VEM LATIR COM A GENTE" title="Onde estamos 📍" subtitle="Estamos no shopping mais carioca do Rio." />
         <div className="mt-8 bg-card rounded-3xl ink-border chunky-shadow p-8">
