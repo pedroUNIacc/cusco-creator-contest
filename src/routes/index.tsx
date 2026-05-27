@@ -152,6 +152,71 @@ function useAuth() {
   return { user, login, logout };
 }
 
+/* ---------------- CUSCO CLAN (pontos) ---------------- */
+
+const POINTS_EVENT = "pitstop_points_updated";
+function pointsKey(email: string) {
+  return `pitstop_points_${email.toLowerCase()}`;
+}
+function redemptionsKey(email: string) {
+  return `pitstop_redemptions_${email.toLowerCase()}`;
+}
+function getPoints(email: string): number {
+  if (typeof window === "undefined") return 0;
+  const raw = localStorage.getItem(pointsKey(email));
+  return raw ? Number(raw) || 0 : 0;
+}
+function addPoints(email: string, amount: number) {
+  const next = getPoints(email) + amount;
+  localStorage.setItem(pointsKey(email), String(next));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+  return next;
+}
+function spendPoints(email: string, amount: number): boolean {
+  const cur = getPoints(email);
+  if (cur < amount) return false;
+  localStorage.setItem(pointsKey(email), String(cur - amount));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+  return true;
+}
+type Redemption = { id: string; reward: string; cost: number; code: string; at: string };
+function addRedemption(email: string, r: Redemption) {
+  const raw = localStorage.getItem(redemptionsKey(email));
+  const list: Redemption[] = raw ? JSON.parse(raw) : [];
+  list.unshift(r);
+  localStorage.setItem(redemptionsKey(email), JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT));
+}
+function getRedemptions(email: string): Redemption[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(redemptionsKey(email));
+  return raw ? JSON.parse(raw) : [];
+}
+function usePoints(email: string | undefined) {
+  const [points, setPoints] = useState(0);
+  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  useEffect(() => {
+    if (!email) {
+      setPoints(0);
+      setRedemptions([]);
+      return;
+    }
+    const sync = () => {
+      setPoints(getPoints(email));
+      setRedemptions(getRedemptions(email));
+    };
+    sync();
+    window.addEventListener(POINTS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(POINTS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [email]);
+  return { points, redemptions };
+}
+
+
 function Index() {
   const auth = useAuth();
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
