@@ -414,11 +414,13 @@ function Simulator({ auth }: { auth: ReturnType<typeof useAuth> }) {
 
   function handleAdopt() {
     setDone(true);
+    if (auth.user) addPoints(auth.user.email, total);
     if (joinContest) {
       if (auth.user) setShowPetCard(true);
       else setShowLogin(true);
     }
   }
+
 
   return (
     <section id="simulador" className="py-16 sm:py-24">
