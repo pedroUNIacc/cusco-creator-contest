@@ -1046,6 +1046,140 @@ function Caocurso() {
   );
 }
 
+/* ---------------- CUSCO CLAN SECTION ---------------- */
+
+function CuscoClan({
+  auth,
+  onLoginClick,
+}: {
+  auth: ReturnType<typeof useAuth>;
+  onLoginClick: () => void;
+}) {
+  const email = auth.user?.email;
+  const { points, redemptions } = usePoints(email);
+  const [flash, setFlash] = useState<string | null>(null);
+
+  function redeem(rewardId: string) {
+    if (!auth.user) return onLoginClick();
+    const r = REWARDS.find((x) => x.id === rewardId);
+    if (!r) return;
+    if (!spendPoints(auth.user.email, r.cost)) {
+      setFlash(`Faltam ${r.cost - points} pontos pra ${r.name}. Continua latindo! 🐾`);
+      setTimeout(() => setFlash(null), 3500);
+      return;
+    }
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    addRedemption(auth.user.email, {
+      id: `${Date.now()}`,
+      reward: r.name,
+      cost: r.cost,
+      code,
+      at: new Date().toISOString(),
+    });
+    setFlash(`🎉 Resgatado! Mostra o código #${code} no balcão pra retirar: ${r.name}.`);
+    setTimeout(() => setFlash(null), 6000);
+  }
+
+  return (
+    <section id="cuscoclan" className="py-16 sm:py-24 bg-bun ink-border border-x-0">
+      <div className="mx-auto max-w-6xl px-4">
+        <SectionTitle
+          kicker="PROGRAMA DE PONTOS"
+          title="Cusco Clan 🦴"
+          subtitle="A cada R$ 1 gasto no Pit Stop, teu cusco ganha 1 ponto. Troca por mimos da casa quando juntar a matilha."
+        />
+
+        <div className="mt-10 grid lg:grid-cols-[320px_1fr] gap-6 items-start">
+          {/* Wallet */}
+          <aside className="bg-ink text-background rounded-3xl ink-border chunky-shadow p-6 lg:sticky lg:top-24" style={{ background: "var(--ink)" }}>
+            {auth.user ? (
+              <>
+                <div className="text-xs font-bold opacity-70 tracking-widest">SUA MATILHA</div>
+                <div className="mt-1 font-display text-2xl font-bold">Olá, {auth.user.name.split(" ")[0]} 🐾</div>
+                <div className="mt-6 bg-primary text-primary-foreground rounded-2xl ink-border p-5 text-center">
+                  <div className="text-xs font-bold tracking-widest">SALDO DE OSSINHOS</div>
+                  <div className="mt-1 font-display text-5xl font-bold">{points}</div>
+                  <div className="text-xs mt-1 opacity-80">pontos disponíveis</div>
+                </div>
+                <p className="mt-4 text-xs opacity-80">
+                  💡 Cada adoção de cusco te dá pontos igual ao valor do pedido. Acumula e troca aí embaixo.
+                </p>
+                {redemptions.length > 0 && (
+                  <div className="mt-5">
+                    <div className="text-xs font-bold opacity-70 tracking-widest">RESGATES RECENTES</div>
+                    <ul className="mt-2 space-y-2">
+                      {redemptions.slice(0, 3).map((r) => (
+                        <li key={r.id} className="text-xs bg-background/10 rounded-xl p-2.5">
+                          <div className="font-bold">{r.reward}</div>
+                          <div className="opacity-70">Código <strong>#{r.code}</strong> · {r.cost} pts</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="text-5xl">🐕</div>
+                <p className="mt-3 font-display text-xl font-bold">Entra na matilha</p>
+                <p className="mt-2 text-sm opacity-80">
+                  Faz login pra começar a juntar ossinhos a cada compra e trocar por mimos.
+                </p>
+                <button
+                  onClick={onLoginClick}
+                  className="mt-5 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow cursor-pointer"
+                >
+                  Entrar 🐾
+                </button>
+              </div>
+            )}
+          </aside>
+
+          {/* Rewards catalog */}
+          <div>
+            {flash && (
+              <div className="mb-5 bg-card rounded-2xl ink-border chunky-shadow-sm p-4 text-sm font-bold animate-pop">
+                {flash}
+              </div>
+            )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {REWARDS.map((r) => {
+                const affordable = !!auth.user && points >= r.cost;
+                return (
+                  <article
+                    key={r.id}
+                    className={`bg-card rounded-3xl ink-border p-5 flex flex-col ${affordable ? "chunky-shadow" : "chunky-shadow-sm"}`}
+                  >
+                    <div className="text-5xl">{r.emoji}</div>
+                    <h3 className="mt-3 font-display text-xl font-bold leading-tight">{r.name}</h3>
+                    <p className="mt-1 text-sm text-foreground/70 flex-1">{r.desc}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <span className="font-display text-lg font-bold text-accent">{r.cost} pts</span>
+                      <button
+                        onClick={() => redeem(r.id)}
+                        disabled={!!auth.user && !affordable}
+                        className={`font-bold text-sm px-4 py-2 rounded-full ink-border chunky-shadow-sm transition cursor-pointer disabled:cursor-not-allowed ${
+                          !auth.user
+                            ? "bg-background hover:bg-primary/30"
+                            : affordable
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {!auth.user ? "Entrar pra trocar" : affordable ? "Trocar 🦴" : `Faltam ${r.cost - points}`}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------- WHERE / FOOTER ---------------- */
 
 function WhereWeAre() {
