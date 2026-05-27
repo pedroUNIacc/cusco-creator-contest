@@ -231,8 +231,10 @@ function Index() {
         <Hero />
         <Simulator auth={auth} />
         <Caocurso />
+        <CuscoClan auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <WhereWeAre />
       </main>
+
       <Footer />
       {showHeaderLogin && (
         <LoginModal
