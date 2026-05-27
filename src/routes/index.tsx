@@ -243,9 +243,9 @@ function Hero() {
           <span className="inline-block bg-accent text-accent-foreground font-bold text-xs px-3 py-1 rounded-full ink-border chunky-shadow-sm">
             🐾 BARRA SHOPPING · QUIOSQUE
           </span>
-          <h1 className="mt-4 font-display text-5xl sm:text-7xl font-bold leading-[0.95]">
-            Hot dog <span className="text-accent">com raça</span>,<br />
-            fome de <em className="not-italic underline decoration-accent decoration-[6px] underline-offset-4">vira-lata</em>.
+          <h1 className="mt-4 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] text-balance whitespace-normal">
+            <span className="whitespace-nowrap">Hot dog <span className="text-accent">com raça</span>,</span>{" "}
+            <span className="whitespace-nowrap">fome de <em className="not-italic underline decoration-accent decoration-[6px] underline-offset-4">vira&#8209;lata</em>.</span>
           </h1>
           <p className="mt-5 text-lg text-foreground/80 max-w-md">
             Monte seu cusco do jeitinho que ele late mais alto, ganhe um Certificado de Adoção e ainda concorra a refri grátis. Au au!
@@ -921,11 +921,13 @@ function Caocurso() {
                     👑 LÍDER DA MATILHA
                   </span>
                 )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl overflow-hidden">
+                <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
                   {p.photo ? (
-                    <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                    <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
-                    <span>{p.emoji}</span>
+                    <div className="absolute inset-0 grid place-items-center text-7xl">
+                      <span>{p.emoji}</span>
+                    </div>
                   )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between">
