@@ -873,7 +873,7 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
 type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
 
 function Caocurso() {
-  const [pets, setPets] = useState<Pet[]>(MOCK_PETS);
+  const [pets, setPets] = useState<Pet[]>([]);
   const [voted, setVoted] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -881,7 +881,7 @@ function Caocurso() {
       try {
         const raw = localStorage.getItem("pitstop_pets");
         const stored: Pet[] = raw ? JSON.parse(raw) : [];
-        setPets([...stored, ...MOCK_PETS]);
+        setPets(stored);
       } catch {}
     };
     load();
@@ -900,6 +900,7 @@ function Caocurso() {
     setPets((ps) => ps.map((p) => (p.id === id ? { ...p, votes: p.votes + 1 } : p)));
     setVoted((s) => new Set(s).add(id));
   }
+
 
   return (
     <section id="caocurso" className="py-16 sm:py-24 bg-primary/40 ink-border border-x-0">
