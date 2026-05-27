@@ -271,6 +271,7 @@ function Header({
         <nav className="hidden sm:flex items-center gap-1 text-sm font-bold">
           <a href="#simulador" className="px-3 py-2 rounded-full hover:bg-primary transition">🌭 Adote seu Cusco</a>
           <a href="#caocurso" className="px-3 py-2 rounded-full hover:bg-primary transition">🏆 Cãocurso</a>
+          <a href="#cuscoclan" className="px-3 py-2 rounded-full hover:bg-primary transition">🦴 Cusco Clan</a>
           <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
         </nav>
         <div className="flex items-center gap-2">
