@@ -921,11 +921,13 @@ function Caocurso() {
                     👑 LÍDER DA MATILHA
                   </span>
                 )}
-                <div className="aspect-square rounded-2xl ink-border bg-bun grid place-items-center text-7xl overflow-hidden">
+                <div className="aspect-square rounded-2xl ink-border bg-bun overflow-hidden relative">
                   {p.photo ? (
-                    <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                    <img src={p.photo} alt={p.name} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
-                    <span>{p.emoji}</span>
+                    <div className="absolute inset-0 grid place-items-center text-7xl">
+                      <span>{p.emoji}</span>
+                    </div>
                   )}
                 </div>
                 <div className="mt-4 flex items-baseline justify-between">
