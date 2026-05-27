@@ -109,14 +109,17 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
-const MOCK_PETS = [
-  { id: 1, name: "Pingo", owner: "@anaclara", votes: 142, emoji: "🐶" },
-  { id: 2, name: "Biscoito", owner: "@thiagop", votes: 121, emoji: "🐕" },
-  { id: 3, name: "Mel", owner: "@jujubaa", votes: 98, emoji: "🐾" },
-  { id: 4, name: "Thor", owner: "@rafael", votes: 76, emoji: "🦴" },
-  { id: 5, name: "Nina", owner: "@camis", votes: 64, emoji: "🐩" },
-  { id: 6, name: "Bento", owner: "@lulu", votes: 51, emoji: "🐕‍🦺" },
+const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
+  { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 5, desc: "Resgate uma latinha gelada no balcão." },
+  { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 8, desc: "Topping crocante por conta da casa." },
+  { id: "salsicha", name: "Salsicha extra", emoji: "🌭", cost: 12, desc: "Dobra a pegada do teu próximo cusco." },
+  { id: "caramelo", name: "Hot dog Caramelo", emoji: "🐶", cost: 25, desc: "Um Caramelo inteirinho de cortesia." },
+  { id: "golden", name: "Hot dog Golden", emoji: "🦴", cost: 35, desc: "Dose dupla de salsicha, dose dupla de amor." },
+  { id: "fox", name: "Hot dog FoxPaulistinha", emoji: "🐕", cost: 50, desc: "Recheado até o último latido." },
+  { id: "doberman", name: "Hot dog Doberman", emoji: "🐕‍🦺", cost: 60, desc: "Pra fome braba, sem economizar." },
+  { id: "rott", name: "Combo Rottweiler + Refri", emoji: "👑", cost: 80, desc: "O top da matilha + refri pra fechar." },
 ];
+
 
 /* ---------------- AUTH (localStorage) ---------------- */
 
