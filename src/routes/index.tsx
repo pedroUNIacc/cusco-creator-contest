@@ -10,6 +10,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import logo from "@/assets/logo.png";
 
+// Imagens das raças usadas no carrossel e no simulador
+import dogCaramelo from "@/assets/dog-caramelo.png";
+import dogGolden from "@/assets/dog-golden.png";
+import dogFox from "@/assets/dog-fox.png";
+import dogDoberman from "@/assets/dog-doberman.png";
+import dogRott from "@/assets/dog-rott.png";
+
+// Componentes do shadcn que montam o carrossel da hero
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+
+
 // Rota principal do TanStack Router — define metadados (SEO/og) e fontes da página
 export const Route = createFileRoute("/")({
   head: () => ({
