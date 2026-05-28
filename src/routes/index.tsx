@@ -454,7 +454,8 @@ function HeroCarousel() {
               </CarouselItem>
             ))}
           </CarouselContent>
-        </Carousel>
+        {/* Bolinhas de navegação — clicar pula direto pro slide correspondente */}
+
         <div className="flex justify-center gap-2.5 py-3 bg-background">
           {BREEDS.map((b, i) => (
             <button
