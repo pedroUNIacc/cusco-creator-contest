@@ -1,8 +1,16 @@
+// ============================================================
+// Página principal do Pit Stop do Cusco (rota "/")
+// Concentra: hero, simulador de pedido, Cãocurso, Cusco Clan,
+// autenticação local, modal de login e formulário de inscrição.
+// Persistência: tudo em localStorage (sem backend ainda).
+// ============================================================
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import logo from "@/assets/logo.png";
 
+// Imagens das raças usadas no carrossel e no simulador
 import dogCaramelo from "@/assets/dog-caramelo.png";
 import dogGolden from "@/assets/dog-golden.png";
 import dogFox from "@/assets/dog-fox.png";
