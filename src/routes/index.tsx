@@ -1283,12 +1283,12 @@ function CuscoClan({
     </section>
   );
 }
+
 /* ---------------- ONDE ESTAMOS / RODAPÉ ---------------- */
 
 // Seção institucional com o endereço do quiosque
 function WhereWeAre() {
 
-function WhereWeAre() {
   const scrollRef = useScrollReveal();
   return (
     <section ref={scrollRef} id="onde" className="scroll-reveal py-16 sm:py-24">
