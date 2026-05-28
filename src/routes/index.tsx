@@ -478,24 +478,26 @@ function HeroCarousel() {
 // Componente que monta o "adote seu cusco": escolher raça, complementos,
 // refri, preencher nome e (opcionalmente) inscrever o pet no Cãocurso.
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
-
   const scrollRef = useScrollReveal();
-  const [breedId, setBreedId] = useState<string>("fox");
-  const [drink, setDrink] = useState(true);
-  const [name, setName] = useState("");
-  const [joinContest, setJoinContest] = useState(false);
-  const [done, setDone] = useState(false);
-  const [showPetCard, setShowPetCard] = useState(false);
-  const [complements, setComplements] = useState<string[]>([]);
+  // Estados do formulário
+  const [breedId, setBreedId] = useState<string>("fox"); // raça selecionada
+  const [drink, setDrink] = useState(true);              // se vai refri (+R$1)
+  const [name, setName] = useState("");                  // nome do tutor (humano)
+  const [joinContest, setJoinContest] = useState(false); // marcou pra entrar no Cãocurso?
+  const [done, setDone] = useState(false);               // já confirmou o pedido?
+  const [showPetCard, setShowPetCard] = useState(false); // mostra form de inscrição do pet
+  const [complements, setComplements] = useState<string[]>([]); // ids dos complementos marcados
 
+  // Objeto completo da raça atual e total do pedido (raça + refri)
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
   const total = breed.price + (drink ? 1 : 0);
 
-  // Reset complements when breed changes (different max)
+  // Ao trocar de raça os complementos zeram (o limite muda)
   useEffect(() => {
     setComplements([]);
   }, [breedId]);
 
+  // Alterna um complemento respeitando o limite máximo da raça
   function toggleComplement(id: string) {
     setComplements((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
@@ -504,6 +506,8 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     });
   }
 
+  // Confirma a "adoção": credita pontos e, se marcou Cãocurso, abre o form do pet.
+  // Se o usuário não estiver logado, abre o modal de login antes.
   function handleAdopt() {
     setDone(true);
     if (auth.user) addPoints(auth.user.email, total);
