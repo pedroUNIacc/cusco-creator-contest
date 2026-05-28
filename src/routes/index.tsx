@@ -418,7 +418,9 @@ function Hero() {
   );
 }
 
+// Carrossel auto-rotativo das raças exibido na hero, com bolinhas de navegação
 function HeroCarousel() {
+
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [current, setCurrent] = useState(0);
 
