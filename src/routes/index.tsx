@@ -120,6 +120,8 @@ const BREEDS: Breed[] = [
   },
 ];
 
+// Lista de complementos que o cliente pode marcar no simulador.
+// O limite por pedido vem do campo `maxComplements` da raça escolhida.
 const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "batata", name: "Batata palha", emoji: "🥔" },
   { id: "milho", name: "Milho", emoji: "🌽" },
@@ -131,6 +133,8 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
+// Catálogo de recompensas do programa de pontos "Cusco Clan".
+// `cost` é em ossinhos (pontos). O cliente troca pontos por mimos da casa.
 const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
   { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 15, desc: "Resgate uma latinha gelada no balcão." },
   { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 24, desc: "Topping crocante por conta da casa." },
@@ -141,6 +145,7 @@ const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: st
   { id: "doberman", name: "Hot dog Doberman", emoji: "🐕‍🦺", cost: 180, desc: "Pra fome braba, sem economizar." },
   { id: "rott", name: "Combo Rottweiler + Refri", emoji: "👑", cost: 240, desc: "O top da matilha + refri pra fechar." },
 ];
+
 
 
 /* ---------------- AUTH (localStorage) ---------------- */
