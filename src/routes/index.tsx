@@ -799,13 +799,13 @@ function Certificate({
     </div>
   );
 }
+
+/* ---------------- MODAL DE LOGIN ---------------- */
+
 // Modal de login/cadastro. Persiste usuários em localStorage (chave pitstop_users).
 // Em produção isso deve ser substituído por auth real (Lovable Cloud).
 function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u: User) => void }) {
 
-/* ---------------- LOGIN MODAL ---------------- */
-
-function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u: User) => void }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
