@@ -347,12 +347,13 @@ function Header({
           <a href="#simulador" className="px-3 py-2 rounded-full hover:bg-primary transition">🌭 Adote seu Cusco</a>
           <a href="#caocurso" className="px-3 py-2 rounded-full hover:bg-primary transition">🏆 Cãocurso</a>
           <a href="#cuscoclan" className="px-3 py-2 rounded-full hover:bg-primary transition">🦴 Cusco Clan</a>
+          <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
+        </nav>
         <div className="flex items-center gap-2">
           {/* Se há usuário logado, mostra saudação + botão Sair.
               Caso contrário, mostra botão Entrar que abre o modal de login. */}
           {user ? (
 
-          {user ? (
             <>
               <span className="hidden sm:inline text-sm font-bold">Olá, {user.name.split(" ")[0]} 🐾</span>
               <button
