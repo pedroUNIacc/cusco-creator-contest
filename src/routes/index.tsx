@@ -710,10 +710,10 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
 // Cabeçalho numerado de cada etapa do simulador (1 — Escolha a raça, etc.)
 function StepHeader({ n, title }: { n: number; title: string }) {
 
-function StepHeader({ n, title }: { n: number; title: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="h-9 w-9 grid place-items-center rounded-full bg-accent text-accent-foreground font-display font-bold ink-border">
