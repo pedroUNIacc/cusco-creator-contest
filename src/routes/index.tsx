@@ -1,15 +1,27 @@
+// ============================================================
+// Página principal do Pit Stop do Cusco (rota "/")
+// Concentra: hero, simulador de pedido, Cãocurso, Cusco Clan,
+// autenticação local, modal de login e formulário de inscrição.
+// Persistência: tudo em localStorage (sem backend ainda).
+// ============================================================
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import logo from "@/assets/logo.png";
 
+// Imagens das raças usadas no carrossel e no simulador
 import dogCaramelo from "@/assets/dog-caramelo.png";
 import dogGolden from "@/assets/dog-golden.png";
 import dogFox from "@/assets/dog-fox.png";
 import dogDoberman from "@/assets/dog-doberman.png";
 import dogRott from "@/assets/dog-rott.png";
+
+// Componentes do shadcn que montam o carrossel da hero
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
+
+// Rota principal do TanStack Router — define metadados (SEO/og) e fontes da página
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -26,6 +38,7 @@ export const Route = createFileRoute("/")({
       },
     ],
     links: [
+      // Carrega as fontes Fredoka (display) e Nunito (texto) usadas no design
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap",
@@ -35,18 +48,26 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+
+
+// ---------------- DADOS ESTÁTICOS DO CARDÁPIO ----------------
+
+// Tipo que representa uma raça/opção de hot dog no cardápio
 type Breed = {
-  id: string;
-  name: string;
-  tag: string;
-  desc: string;
-  price: number;
-  img: string;
-  vibe: string;
-  maxComplements: number;
+  id: string;            // identificador único usado para selecionar a raça
+  name: string;          // nome exibido (ex.: "Caramelo")
+  tag: string;           // subtítulo curto e divertido
+  desc: string;          // descrição do recheio
+  price: number;         // preço base em reais
+  img: string;           // imagem importada da pasta assets
+  vibe: string;          // frase curta para o resumo do pedido
+  maxComplements: number;// quantos complementos podem ser marcados
 };
 
+// Catálogo de raças exibido no carrossel da hero e no simulador.
+// Cada raça tem seu próprio limite de complementos.
 const BREEDS: Breed[] = [
+
   {
     id: "caramelo",
     name: "Caramelo",
@@ -99,6 +120,8 @@ const BREEDS: Breed[] = [
   },
 ];
 
+// Lista de complementos que o cliente pode marcar no simulador.
+// O limite por pedido vem do campo `maxComplements` da raça escolhida.
 const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "batata", name: "Batata palha", emoji: "🥔" },
   { id: "milho", name: "Milho", emoji: "🌽" },
@@ -110,6 +133,8 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
+// Catálogo de recompensas do programa de pontos "Cusco Clan".
+// `cost` é em ossinhos (pontos). O cliente troca pontos por mimos da casa.
 const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
   { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 15, desc: "Resgate uma latinha gelada no balcão." },
   { id: "batata", name: "Batata palha extra", emoji: "🥔", cost: 24, desc: "Topping crocante por conta da casa." },
@@ -122,11 +147,19 @@ const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: st
 ];
 
 
-/* ---------------- AUTH (localStorage) ---------------- */
 
+/* ---------------- AUTENTICAÇÃO LOCAL (localStorage) ----------------
+ * Implementação simples sem backend: o usuário "logado" é salvo no
+ * localStorage do navegador. Serve só pra simular o fluxo no protótipo.
+ * Em produção, isso deve ser trocado por autenticação real (ex.: Cloud).
+ */
+
+// Forma do usuário em memória — só nome e email
 type User = { name: string; email: string };
+// Chave usada no localStorage pra guardar o usuário logado
 const AUTH_KEY = "pitstop_user";
 
+// Lê o usuário salvo no navegador (retorna null no SSR ou se não houver)
 function getStoredUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
@@ -137,8 +170,10 @@ function getStoredUser(): User | null {
   }
 }
 
+// Hook que expõe o usuário atual + funções de login/logout
 function useAuth() {
   const [user, setUser] = useState<User | null>(null);
+  // Carrega o usuário do localStorage só no cliente (evita erro de SSR)
   useEffect(() => {
     setUser(getStoredUser());
   }, []);
@@ -153,26 +188,42 @@ function useAuth() {
   return { user, login, logout };
 }
 
-/* ---------------- CUSCO CLAN (pontos) ---------------- */
+/* ---------------- CUSCO CLAN — PROGRAMA DE PONTOS ----------------
+ * Cada usuário tem um saldo de "ossinhos" (pontos) e um histórico de
+ * resgates, ambos persistidos no localStorage. Os dados são chaveados
+ * por email para suportar múltiplos usuários no mesmo navegador.
+ *
+ * Sempre que pontos/resgates mudam, disparamos um CustomEvent global
+ * (POINTS_EVENT) para que componentes que usam `usePoints` re-sincronizem.
+ */
 
 const POINTS_EVENT = "pitstop_points_updated";
+
+// Monta a chave do saldo de pontos para um email específico
 function pointsKey(email: string) {
   return `pitstop_points_${email.toLowerCase()}`;
 }
+// Monta a chave da lista de resgates para um email específico
 function redemptionsKey(email: string) {
   return `pitstop_redemptions_${email.toLowerCase()}`;
 }
+
+// Lê o saldo atual de pontos do usuário
 function getPoints(email: string): number {
   if (typeof window === "undefined") return 0;
   const raw = localStorage.getItem(pointsKey(email));
   return raw ? Number(raw) || 0 : 0;
 }
+
+// Soma pontos ao saldo (usado após uma compra/adoção)
 function addPoints(email: string, amount: number) {
   const next = getPoints(email) + amount;
   localStorage.setItem(pointsKey(email), String(next));
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
   return next;
 }
+
+// Tenta gastar pontos — devolve false se o saldo for insuficiente
 function spendPoints(email: string, amount: number): boolean {
   const cur = getPoints(email);
   if (cur < amount) return false;
@@ -180,7 +231,11 @@ function spendPoints(email: string, amount: number): boolean {
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
   return true;
 }
+
+// Formato de um resgate de recompensa
 type Redemption = { id: string; reward: string; cost: number; code: string; at: string };
+
+// Adiciona um novo resgate ao topo do histórico
 function addRedemption(email: string, r: Redemption) {
   const raw = localStorage.getItem(redemptionsKey(email));
   const list: Redemption[] = raw ? JSON.parse(raw) : [];
@@ -188,15 +243,21 @@ function addRedemption(email: string, r: Redemption) {
   localStorage.setItem(redemptionsKey(email), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
 }
+
+// Lê todos os resgates do usuário (mais recentes primeiro)
 function getRedemptions(email: string): Redemption[] {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(redemptionsKey(email));
   return raw ? JSON.parse(raw) : [];
 }
+
+// Hook reativo: devolve saldo e resgates do usuário, atualizando
+// automaticamente quando o evento POINTS_EVENT ou um "storage" disparam
 function usePoints(email: string | undefined) {
   const [points, setPoints] = useState(0);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   useEffect(() => {
+    // Sem usuário logado: zera o estado
     if (!email) {
       setPoints(0);
       setRedemptions([]);
@@ -207,6 +268,8 @@ function usePoints(email: string | undefined) {
       setRedemptions(getRedemptions(email));
     };
     sync();
+    // Mudanças na mesma aba viajam por CustomEvent;
+    // mudanças em outras abas vêm via evento "storage" do browser
     window.addEventListener(POINTS_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -218,17 +281,23 @@ function usePoints(email: string | undefined) {
 }
 
 
+// ---------------- COMPONENTE RAIZ DA PÁGINA ----------------
+// Monta o layout principal: header, seções e modal de login global
 function Index() {
+  // Estado de autenticação compartilhado entre header, simulador e Cusco Clan
   const auth = useAuth();
+  // Controla a exibição do modal de login chamado pelo header/Cusco Clan
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
     <div className="min-h-screen text-foreground">
+      {/* Cabeçalho fixo com navegação e botão de login/sair */}
       <Header
         user={auth.user}
         onLogout={auth.logout}
         onLoginClick={() => setShowHeaderLogin(true)}
       />
       <main>
+        {/* Seções da landing, em ordem de scroll */}
         <Hero />
         <Simulator auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <Caocurso />
@@ -237,6 +306,8 @@ function Index() {
       </main>
 
       <Footer />
+
+      {/* Modal de login renderizado por cima de tudo quando solicitado */}
       {showHeaderLogin && (
         <LoginModal
           onClose={() => setShowHeaderLogin(false)}
@@ -250,7 +321,10 @@ function Index() {
   );
 }
 
+// ---------------- HEADER (cabeçalho fixo) ----------------
+// Mostra logo, navegação por âncoras e estado do usuário (logado/visitante)
 function Header({
+
   user,
   onLogout,
   onLoginClick,
@@ -276,7 +350,10 @@ function Header({
           <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
         </nav>
         <div className="flex items-center gap-2">
+          {/* Se há usuário logado, mostra saudação + botão Sair.
+              Caso contrário, mostra botão Entrar que abre o modal de login. */}
           {user ? (
+
             <>
               <span className="hidden sm:inline text-sm font-bold">Olá, {user.name.split(" ")[0]} 🐾</span>
               <button
@@ -306,7 +383,10 @@ function Header({
   );
 }
 
+// ---------------- HERO ----------------
+// Primeira seção da página com título principal, CTA e carrossel de raças
 function Hero() {
+
   const scrollRef = useScrollReveal();
   return (
     <section ref={scrollRef} id="top" className="scroll-reveal relative overflow-hidden">
@@ -338,21 +418,27 @@ function Hero() {
   );
 }
 
+// Carrossel auto-rotativo das raças exibido na hero, com bolinhas de navegação
 function HeroCarousel() {
+  // `api` é a referência do Embla Carousel (do shadcn) usada pra controlar o slide ativo
   const [api, setApi] = useState<CarouselApi | null>(null);
+  // Índice do slide atualmente visível (usado pra destacar a bolinha correta)
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
+    // Atualiza o índice sempre que o usuário ou o autoplay trocam o slide
     const onSelect = () => setCurrent(api.selectedScrollSnap());
     api.on("select", onSelect);
+    // Autoplay: avança um slide a cada 3,2s
     const id = setInterval(() => api.scrollNext(), 3200);
     return () => {
       api.off("select", onSelect);
       clearInterval(id);
     };
   }, [api]);
+
 
   return (
     <div className="relative">
@@ -369,7 +455,9 @@ function HeroCarousel() {
             ))}
           </CarouselContent>
         </Carousel>
+        {/* Bolinhas de navegação — clicar pula direto pro slide correspondente */}
         <div className="flex justify-center gap-2.5 py-3 bg-background">
+
           {BREEDS.map((b, i) => (
             <button
               key={b.id}
@@ -385,26 +473,31 @@ function HeroCarousel() {
   );
 }
 
-/* ---------------- SIMULATOR ---------------- */
+/* ---------------- SIMULADOR DE PEDIDO ---------------- */
 
+// Componente que monta o "adote seu cusco": escolher raça, complementos,
+// refri, preencher nome e (opcionalmente) inscrever o pet no Cãocurso.
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
-  const [breedId, setBreedId] = useState<string>("fox");
-  const [drink, setDrink] = useState(true);
-  const [name, setName] = useState("");
-  const [joinContest, setJoinContest] = useState(false);
-  const [done, setDone] = useState(false);
-  const [showPetCard, setShowPetCard] = useState(false);
-  const [complements, setComplements] = useState<string[]>([]);
+  // Estados do formulário
+  const [breedId, setBreedId] = useState<string>("fox"); // raça selecionada
+  const [drink, setDrink] = useState(true);              // se vai refri (+R$1)
+  const [name, setName] = useState("");                  // nome do tutor (humano)
+  const [joinContest, setJoinContest] = useState(false); // marcou pra entrar no Cãocurso?
+  const [done, setDone] = useState(false);               // já confirmou o pedido?
+  const [showPetCard, setShowPetCard] = useState(false); // mostra form de inscrição do pet
+  const [complements, setComplements] = useState<string[]>([]); // ids dos complementos marcados
 
+  // Objeto completo da raça atual e total do pedido (raça + refri)
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
   const total = breed.price + (drink ? 1 : 0);
 
-  // Reset complements when breed changes (different max)
+  // Ao trocar de raça os complementos zeram (o limite muda)
   useEffect(() => {
     setComplements([]);
   }, [breedId]);
 
+  // Alterna um complemento respeitando o limite máximo da raça
   function toggleComplement(id: string) {
     setComplements((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
@@ -413,6 +506,8 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     });
   }
 
+  // Confirma a "adoção": credita pontos e, se marcou Cãocurso, abre o form do pet.
+  // Se o usuário não estiver logado, abre o modal de login antes.
   function handleAdopt() {
     setDone(true);
     if (auth.user) addPoints(auth.user.email, total);
@@ -605,7 +700,9 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
   );
 }
 
+// Pequeno helper visual: linha "rótulo : valor" usada no resumo do pedido
 function Row({ label, value }: { label: string; value: string }) {
+
   return (
     <div className="flex justify-between">
       <span>{label}</span>
@@ -614,7 +711,9 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Cabeçalho numerado de cada etapa do simulador (1 — Escolha a raça, etc.)
 function StepHeader({ n, title }: { n: number; title: string }) {
+
   return (
     <div className="flex items-center gap-3">
       <span className="h-9 w-9 grid place-items-center rounded-full bg-accent text-accent-foreground font-display font-bold ink-border">
@@ -625,7 +724,10 @@ function StepHeader({ n, title }: { n: number; title: string }) {
   );
 }
 
+// Tela "Certificado de Adoção" exibida após confirmar o pedido no simulador.
+// Mostra resumo do pedido, código aleatório e CTA pra compartilhar nos Stories.
 function Certificate({
+
   name,
   breed,
   drink,
@@ -698,9 +800,12 @@ function Certificate({
   );
 }
 
-/* ---------------- LOGIN MODAL ---------------- */
+/* ---------------- MODAL DE LOGIN ---------------- */
 
+// Modal de login/cadastro. Persiste usuários em localStorage (chave pitstop_users).
+// Em produção isso deve ser substituído por auth real (Lovable Cloud).
 function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u: User) => void }) {
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -801,9 +906,12 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u
   );
 }
 
-/* ---------------- PET SIGNUP CARD ---------------- */
+/* ---------------- INSCRIÇÃO DO PET NO CÃOCURSO ---------------- */
 
+// Form que aparece após confirmar a adoção (se o usuário marcou Cãocurso).
+// Salva nome, @ do dono e foto compactada do pet em localStorage (pitstop_pets).
 function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
+
   const [petName, setPetName] = useState("");
   const [instagram, setInstagram] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -925,10 +1033,13 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
   );
 }
 
-/* ---------------- CÃOCURSO ---------------- */
+/* ---------------- CÃOCURSO (RANKING DE VOTAÇÃO) ---------------- */
 
+// Estrutura de um pet inscrito no concurso
 type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
 
+// Lista os pets inscritos no Cãocurso e permite votar.
+// Atualmente exibe apenas o ÚLTIMO colocado do ranking (slice(-1)).
 function Caocurso() {
   const scrollRef = useScrollReveal();
   const [pets, setPets] = useState<Pet[]>([]);
@@ -951,7 +1062,10 @@ function Caocurso() {
     };
   }, []);
 
-  const sorted = [...pets].sort((a, b) => b.votes - a.votes);
+  // Ordena os pets por votos (mais votados primeiro) e mantém apenas
+  // o último colocado da matilha — os 3 primeiros saem da disputa exibida.
+  const sorted = [...pets].sort((a, b) => b.votes - a.votes).slice(-1);
+
 
   function vote(id: number) {
     if (voted.has(id)) return;
@@ -1033,9 +1147,12 @@ function Caocurso() {
   );
 }
 
-/* ---------------- CUSCO CLAN SECTION ---------------- */
+/* ---------------- SEÇÃO DO CUSCO CLAN (CARTEIRA + CATÁLOGO) ---------------- */
 
+// Componente visual do programa de pontos: mostra saldo, resgates recentes
+// e o catálogo de recompensas. Usa as helpers de pontos definidas no topo.
 function CuscoClan({
+
   auth,
   onLoginClick,
 }: {
@@ -1167,9 +1284,11 @@ function CuscoClan({
   );
 }
 
-/* ---------------- WHERE / FOOTER ---------------- */
+/* ---------------- ONDE ESTAMOS / RODAPÉ ---------------- */
 
+// Seção institucional com o endereço do quiosque
 function WhereWeAre() {
+
   const scrollRef = useScrollReveal();
   return (
     <section ref={scrollRef} id="onde" className="scroll-reveal py-16 sm:py-24">
@@ -1188,7 +1307,9 @@ function WhereWeAre() {
   );
 }
 
+// Rodapé com logo, links sociais e disclaimer cusquento
 function Footer() {
+
   return (
     <footer className="bg-ink text-background ink-border border-x-0 border-b-0" style={{ background: "var(--ink)" }}>
       <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col sm:flex-row gap-6 items-center justify-between">
@@ -1212,7 +1333,9 @@ function Footer() {
   );
 }
 
+// Título reutilizado por todas as seções: kicker (chip), título grande e subtítulo
 function SectionTitle({ kicker, title, subtitle }: { kicker: string; title: string; subtitle: string }) {
+
   return (
     <div className="text-center max-w-2xl mx-auto">
       <span className="inline-block bg-background font-bold text-xs px-3 py-1 rounded-full ink-border">{kicker}</span>
