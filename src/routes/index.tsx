@@ -1033,10 +1033,13 @@ function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
   );
 }
 
-/* ---------------- CÃOCURSO ---------------- */
+/* ---------------- CÃOCURSO (RANKING DE VOTAÇÃO) ---------------- */
 
+// Estrutura de um pet inscrito no concurso
 type Pet = { id: number; name: string; owner: string; votes: number; emoji?: string; photo?: string };
 
+// Lista os pets inscritos no Cãocurso e permite votar.
+// Atualmente exibe apenas o ÚLTIMO colocado do ranking (slice(-1)).
 function Caocurso() {
   const scrollRef = useScrollReveal();
   const [pets, setPets] = useState<Pet[]>([]);
