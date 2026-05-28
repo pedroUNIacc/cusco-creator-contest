@@ -1283,8 +1283,10 @@ function CuscoClan({
     </section>
   );
 }
+/* ---------------- ONDE ESTAMOS / RODAPÉ ---------------- */
 
-/* ---------------- WHERE / FOOTER ---------------- */
+// Seção institucional com o endereço do quiosque
+function WhereWeAre() {
 
 function WhereWeAre() {
   const scrollRef = useScrollReveal();
