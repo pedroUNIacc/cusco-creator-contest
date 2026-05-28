@@ -1307,7 +1307,9 @@ function WhereWeAre() {
   );
 }
 
+// Rodapé com logo, links sociais e disclaimer cusquento
 function Footer() {
+
   return (
     <footer className="bg-ink text-background ink-border border-x-0 border-b-0" style={{ background: "var(--ink)" }}>
       <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col sm:flex-row gap-6 items-center justify-between">
