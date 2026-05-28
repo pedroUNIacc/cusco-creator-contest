@@ -724,7 +724,10 @@ function StepHeader({ n, title }: { n: number; title: string }) {
   );
 }
 
+// Tela "Certificado de Adoção" exibida após confirmar o pedido no simulador.
+// Mostra resumo do pedido, código aleatório e CTA pra compartilhar nos Stories.
 function Certificate({
+
   name,
   breed,
   drink,
