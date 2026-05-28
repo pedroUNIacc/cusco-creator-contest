@@ -1333,7 +1333,9 @@ function Footer() {
   );
 }
 
+// Título reutilizado por todas as seções: kicker (chip), título grande e subtítulo
 function SectionTitle({ kicker, title, subtitle }: { kicker: string; title: string; subtitle: string }) {
+
   return (
     <div className="text-center max-w-2xl mx-auto">
       <span className="inline-block bg-background font-bold text-xs px-3 py-1 rounded-full ink-border">{kicker}</span>
