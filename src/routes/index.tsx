@@ -906,9 +906,12 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (u
   );
 }
 
-/* ---------------- PET SIGNUP CARD ---------------- */
+/* ---------------- INSCRIÇÃO DO PET NO CÃOCURSO ---------------- */
 
+// Form que aparece após confirmar a adoção (se o usuário marcou Cãocurso).
+// Salva nome, @ do dono e foto compactada do pet em localStorage (pitstop_pets).
 function PetSignupCard({ user, onDone }: { user: User; onDone: () => void }) {
+
   const [petName, setPetName] = useState("");
   const [instagram, setInstagram] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
