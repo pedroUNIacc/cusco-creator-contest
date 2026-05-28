@@ -381,9 +381,11 @@ function Header({
       </div>
     </header>
   );
-}
 
+// ---------------- HERO ----------------
+// Primeira seção da página com título principal, CTA e carrossel de raças
 function Hero() {
+
   const scrollRef = useScrollReveal();
   return (
     <section ref={scrollRef} id="top" className="scroll-reveal relative overflow-hidden">
