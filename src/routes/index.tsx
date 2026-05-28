@@ -251,10 +251,13 @@ function getRedemptions(email: string): Redemption[] {
   return raw ? JSON.parse(raw) : [];
 }
 
+// Hook reativo: devolve saldo e resgates do usuário, atualizando
+// automaticamente quando o evento POINTS_EVENT ou um "storage" disparam
 function usePoints(email: string | undefined) {
   const [points, setPoints] = useState(0);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   useEffect(() => {
+    // Sem usuário logado: zera o estado
     if (!email) {
       setPoints(0);
       setRedemptions([]);
@@ -265,6 +268,8 @@ function usePoints(email: string | undefined) {
       setRedemptions(getRedemptions(email));
     };
     sync();
+    // Mudanças na mesma aba viajam por CustomEvent;
+    // mudanças em outras abas vêm via evento "storage" do browser
     window.addEventListener(POINTS_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -276,7 +281,10 @@ function usePoints(email: string | undefined) {
 }
 
 
+// ---------------- COMPONENTE RAIZ DA PÁGINA ----------------
+// Monta o layout principal: header, seções e modal de login global
 function Index() {
+
   const auth = useAuth();
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
