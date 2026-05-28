@@ -1147,9 +1147,12 @@ function Caocurso() {
   );
 }
 
-/* ---------------- CUSCO CLAN SECTION ---------------- */
+/* ---------------- SEÇÃO DO CUSCO CLAN (CARTEIRA + CATÁLOGO) ---------------- */
 
+// Componente visual do programa de pontos: mostra saldo, resgates recentes
+// e o catálogo de recompensas. Usa as helpers de pontos definidas no topo.
 function CuscoClan({
+
   auth,
   onLoginClick,
 }: {
