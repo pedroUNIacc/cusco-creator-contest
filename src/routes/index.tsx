@@ -321,8 +321,10 @@ function Index() {
   );
 }
 
-
+// ---------------- HEADER (cabeçalho fixo) ----------------
+// Mostra logo, navegação por âncoras e estado do usuário (logado/visitante)
 function Header({
+
   user,
   onLogout,
   onLoginClick,
