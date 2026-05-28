@@ -1046,7 +1046,10 @@ function Caocurso() {
     };
   }, []);
 
-  const sorted = [...pets].sort((a, b) => b.votes - a.votes);
+  // Ordena os pets por votos (mais votados primeiro) e mantém apenas
+  // o último colocado da matilha — os 3 primeiros saem da disputa exibida.
+  const sorted = [...pets].sort((a, b) => b.votes - a.votes).slice(-1);
+
 
   function vote(id: number) {
     if (voted.has(id)) return;
