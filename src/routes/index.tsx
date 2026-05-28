@@ -381,6 +381,7 @@ function Header({
       </div>
     </header>
   );
+}
 
 // ---------------- HERO ----------------
 // Primeira seção da página com título principal, CTA e carrossel de raças
