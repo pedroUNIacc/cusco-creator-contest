@@ -148,11 +148,18 @@ const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: st
 
 
 
-/* ---------------- AUTH (localStorage) ---------------- */
+/* ---------------- AUTENTICAÇÃO LOCAL (localStorage) ----------------
+ * Implementação simples sem backend: o usuário "logado" é salvo no
+ * localStorage do navegador. Serve só pra simular o fluxo no protótipo.
+ * Em produção, isso deve ser trocado por autenticação real (ex.: Cloud).
+ */
 
+// Forma do usuário em memória — só nome e email
 type User = { name: string; email: string };
+// Chave usada no localStorage pra guardar o usuário logado
 const AUTH_KEY = "pitstop_user";
 
+// Lê o usuário salvo no navegador (retorna null no SSR ou se não houver)
 function getStoredUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
@@ -163,8 +170,10 @@ function getStoredUser(): User | null {
   }
 }
 
+// Hook que expõe o usuário atual + funções de login/logout
 function useAuth() {
   const [user, setUser] = useState<User | null>(null);
+  // Carrega o usuário do localStorage só no cliente (evita erro de SSR)
   useEffect(() => {
     setUser(getStoredUser());
   }, []);
@@ -179,26 +188,42 @@ function useAuth() {
   return { user, login, logout };
 }
 
-/* ---------------- CUSCO CLAN (pontos) ---------------- */
+/* ---------------- CUSCO CLAN — PROGRAMA DE PONTOS ----------------
+ * Cada usuário tem um saldo de "ossinhos" (pontos) e um histórico de
+ * resgates, ambos persistidos no localStorage. Os dados são chaveados
+ * por email para suportar múltiplos usuários no mesmo navegador.
+ *
+ * Sempre que pontos/resgates mudam, disparamos um CustomEvent global
+ * (POINTS_EVENT) para que componentes que usam `usePoints` re-sincronizem.
+ */
 
 const POINTS_EVENT = "pitstop_points_updated";
+
+// Monta a chave do saldo de pontos para um email específico
 function pointsKey(email: string) {
   return `pitstop_points_${email.toLowerCase()}`;
 }
+// Monta a chave da lista de resgates para um email específico
 function redemptionsKey(email: string) {
   return `pitstop_redemptions_${email.toLowerCase()}`;
 }
+
+// Lê o saldo atual de pontos do usuário
 function getPoints(email: string): number {
   if (typeof window === "undefined") return 0;
   const raw = localStorage.getItem(pointsKey(email));
   return raw ? Number(raw) || 0 : 0;
 }
+
+// Soma pontos ao saldo (usado após uma compra/adoção)
 function addPoints(email: string, amount: number) {
   const next = getPoints(email) + amount;
   localStorage.setItem(pointsKey(email), String(next));
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
   return next;
 }
+
+// Tenta gastar pontos — devolve false se o saldo for insuficiente
 function spendPoints(email: string, amount: number): boolean {
   const cur = getPoints(email);
   if (cur < amount) return false;
@@ -206,7 +231,11 @@ function spendPoints(email: string, amount: number): boolean {
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
   return true;
 }
+
+// Formato de um resgate de recompensa
 type Redemption = { id: string; reward: string; cost: number; code: string; at: string };
+
+// Adiciona um novo resgate ao topo do histórico
 function addRedemption(email: string, r: Redemption) {
   const raw = localStorage.getItem(redemptionsKey(email));
   const list: Redemption[] = raw ? JSON.parse(raw) : [];
@@ -214,11 +243,14 @@ function addRedemption(email: string, r: Redemption) {
   localStorage.setItem(redemptionsKey(email), JSON.stringify(list));
   window.dispatchEvent(new CustomEvent(POINTS_EVENT));
 }
+
+// Lê todos os resgates do usuário (mais recentes primeiro)
 function getRedemptions(email: string): Redemption[] {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(redemptionsKey(email));
   return raw ? JSON.parse(raw) : [];
 }
+
 function usePoints(email: string | undefined) {
   const [points, setPoints] = useState(0);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
