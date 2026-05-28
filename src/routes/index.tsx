@@ -710,6 +710,8 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+// Cabeçalho numerado de cada etapa do simulador (1 — Escolha a raça, etc.)
+function StepHeader({ n, title }: { n: number; title: string }) {
 
 function StepHeader({ n, title }: { n: number; title: string }) {
   return (
