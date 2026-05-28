@@ -473,9 +473,12 @@ function HeroCarousel() {
   );
 }
 
-/* ---------------- SIMULATOR ---------------- */
+/* ---------------- SIMULADOR DE PEDIDO ---------------- */
 
+// Componente que monta o "adote seu cusco": escolher raça, complementos,
+// refri, preencher nome e (opcionalmente) inscrever o pet no Cãocurso.
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
+
   const scrollRef = useScrollReveal();
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
