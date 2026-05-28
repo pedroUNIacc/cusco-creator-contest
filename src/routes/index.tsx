@@ -420,21 +420,25 @@ function Hero() {
 
 // Carrossel auto-rotativo das raças exibido na hero, com bolinhas de navegação
 function HeroCarousel() {
-
+  // `api` é a referência do Embla Carousel (do shadcn) usada pra controlar o slide ativo
   const [api, setApi] = useState<CarouselApi | null>(null);
+  // Índice do slide atualmente visível (usado pra destacar a bolinha correta)
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
+    // Atualiza o índice sempre que o usuário ou o autoplay trocam o slide
     const onSelect = () => setCurrent(api.selectedScrollSnap());
     api.on("select", onSelect);
+    // Autoplay: avança um slide a cada 3,2s
     const id = setInterval(() => api.scrollNext(), 3200);
     return () => {
       api.off("select", onSelect);
       clearInterval(id);
     };
   }, [api]);
+
 
   return (
     <div className="relative">
