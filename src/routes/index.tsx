@@ -50,18 +50,24 @@ export const Route = createFileRoute("/")({
 
 
 
+// ---------------- DADOS ESTÁTICOS DO CARDÁPIO ----------------
+
+// Tipo que representa uma raça/opção de hot dog no cardápio
 type Breed = {
-  id: string;
-  name: string;
-  tag: string;
-  desc: string;
-  price: number;
-  img: string;
-  vibe: string;
-  maxComplements: number;
+  id: string;            // identificador único usado para selecionar a raça
+  name: string;          // nome exibido (ex.: "Caramelo")
+  tag: string;           // subtítulo curto e divertido
+  desc: string;          // descrição do recheio
+  price: number;         // preço base em reais
+  img: string;           // imagem importada da pasta assets
+  vibe: string;          // frase curta para o resumo do pedido
+  maxComplements: number;// quantos complementos podem ser marcados
 };
 
+// Catálogo de raças exibido no carrossel da hero e no simulador.
+// Cada raça tem seu próprio limite de complementos.
 const BREEDS: Breed[] = [
+
   {
     id: "caramelo",
     name: "Caramelo",
