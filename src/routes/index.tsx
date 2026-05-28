@@ -284,17 +284,20 @@ function usePoints(email: string | undefined) {
 // ---------------- COMPONENTE RAIZ DA PÁGINA ----------------
 // Monta o layout principal: header, seções e modal de login global
 function Index() {
-
+  // Estado de autenticação compartilhado entre header, simulador e Cusco Clan
   const auth = useAuth();
+  // Controla a exibição do modal de login chamado pelo header/Cusco Clan
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
     <div className="min-h-screen text-foreground">
+      {/* Cabeçalho fixo com navegação e botão de login/sair */}
       <Header
         user={auth.user}
         onLogout={auth.logout}
         onLoginClick={() => setShowHeaderLogin(true)}
       />
       <main>
+        {/* Seções da landing, em ordem de scroll */}
         <Hero />
         <Simulator auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <Caocurso />
@@ -303,6 +306,8 @@ function Index() {
       </main>
 
       <Footer />
+
+      {/* Modal de login renderizado por cima de tudo quando solicitado */}
       {showHeaderLogin && (
         <LoginModal
           onClose={() => setShowHeaderLogin(false)}
@@ -315,6 +320,7 @@ function Index() {
     </div>
   );
 }
+
 
 function Header({
   user,
