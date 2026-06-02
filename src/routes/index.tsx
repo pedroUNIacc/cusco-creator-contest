@@ -1292,10 +1292,10 @@ function WhereWeAre() {
   return (
     <section ref={scrollRef} id="onde" className="scroll-reveal py-16 sm:py-24">
       <div className="mx-auto max-w-4xl px-4 text-center">
-        <SectionTitle kicker="VEM LATIR COM A GENTE" title="Onde estamos 📍" subtitle="Estamos no shopping mais carioca do Rio." />
+        <SectionTitle kicker="VEM LATIR COM A GENTE" title="Onde estamos 📍" subtitle="Estamos no shopping mais gaúcho de Porto Alegre." />
         <div className="mt-8 bg-card rounded-3xl ink-border chunky-shadow p-8">
-          <p className="font-display text-2xl">Barra Shopping — Quiosque Pit Stop do Cusco</p>
-          <p className="mt-2 text-foreground/80">Av. das Américas, 4.666 — Barra da Tijuca, Rio de Janeiro</p>
+          <p className="font-display text-2xl">BarraShoppingSul — Quiosque Pit Stop do Cusco</p>
+          <p className="mt-2 text-foreground/80">Av. Diário de Notícias, 300 — Cristal, Porto Alegre/RS</p>
           <p className="mt-4 text-sm">Aberto todos os dias · 10h às 22h</p>
           <div className="mt-6 inline-flex items-center gap-2 bg-primary px-4 py-2 rounded-full ink-border chunky-shadow-sm font-bold">
             🦴 Latiu? Já tá no balcão.
