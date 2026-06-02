@@ -1,6 +1,6 @@
 // ============================================================
 // Página principal do Pit Stop do Cusco (rota "/")
-// Concentra: hero, simulador de pedido, Cãocurso, Cusco Clan,
+// Concentra: hero, simulador de pedido, Cãocurso, Cusco Club,
 // autenticação local, modal de login e formulário de inscrição.
 // Persistência: tudo em localStorage (sem backend ainda).
 // ============================================================
@@ -133,7 +133,7 @@ const COMPLEMENTS: { id: string; name: string; emoji: string }[] = [
   { id: "molho", name: "Molho da casa", emoji: "🥫" },
 ];
 
-// Catálogo de recompensas do programa de pontos "Cusco Clan".
+// Catálogo de recompensas do programa de pontos "Cusco Club".
 // `cost` é em ossinhos (pontos). O cliente troca pontos por mimos da casa.
 const REWARDS: { id: string; name: string; emoji: string; cost: number; desc: string }[] = [
   { id: "refri", name: "Refri grátis", emoji: "🥤", cost: 15, desc: "Resgate uma latinha gelada no balcão." },
@@ -188,7 +188,7 @@ function useAuth() {
   return { user, login, logout };
 }
 
-/* ---------------- CUSCO CLAN — PROGRAMA DE PONTOS ----------------
+/* ---------------- CUSCO CLUB — PROGRAMA DE PONTOS ----------------
  * Cada usuário tem um saldo de "ossinhos" (pontos) e um histórico de
  * resgates, ambos persistidos no localStorage. Os dados são chaveados
  * por email para suportar múltiplos usuários no mesmo navegador.
@@ -284,9 +284,9 @@ function usePoints(email: string | undefined) {
 // ---------------- COMPONENTE RAIZ DA PÁGINA ----------------
 // Monta o layout principal: header, seções e modal de login global
 function Index() {
-  // Estado de autenticação compartilhado entre header, simulador e Cusco Clan
+  // Estado de autenticação compartilhado entre header, simulador e Cusco Club
   const auth = useAuth();
-  // Controla a exibição do modal de login chamado pelo header/Cusco Clan
+  // Controla a exibição do modal de login chamado pelo header/Cusco Club
   const [showHeaderLogin, setShowHeaderLogin] = useState(false);
   return (
     <div className="min-h-screen text-foreground">
@@ -301,7 +301,7 @@ function Index() {
         <Hero />
         <Simulator auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <Caocurso />
-        <CuscoClan auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
+        <CuscoClub auth={auth} onLoginClick={() => setShowHeaderLogin(true)} />
         <WhereWeAre />
       </main>
 
@@ -346,7 +346,7 @@ function Header({
         <nav className="hidden sm:flex items-center gap-1 text-sm font-bold">
           <a href="#simulador" className="px-3 py-2 rounded-full hover:bg-primary transition">🌭 Adote seu Cusco</a>
           <a href="#caocurso" className="px-3 py-2 rounded-full hover:bg-primary transition">🏆 Cãocurso</a>
-          <a href="#cuscoclan" className="px-3 py-2 rounded-full hover:bg-primary transition">🦴 Cusco Clan</a>
+          <a href="#cuscoclub" className="px-3 py-2 rounded-full hover:bg-primary transition">🦴 Cusco Club</a>
           <a href="#onde" className="px-3 py-2 rounded-full hover:bg-primary transition">📍 Onde Estamos</a>
         </nav>
         <div className="flex items-center gap-2">
@@ -702,11 +702,10 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
 
 // Pequeno helper visual: linha "rótulo : valor" usada no resumo do pedido
 function Row({ label, value }: { label: string; value: string }) {
-
   return (
-    <div className="flex justify-between">
-      <span>{label}</span>
-      <span className="font-bold">{value}</span>
+    <div className="flex justify-between gap-2">
+      <span className="shrink-0">{label}</span>
+      <span className="font-bold text-right break-words">{value}</span>
     </div>
   );
 }
@@ -1147,11 +1146,11 @@ function Caocurso() {
   );
 }
 
-/* ---------------- SEÇÃO DO CUSCO CLAN (CARTEIRA + CATÁLOGO) ---------------- */
+/* ---------------- SEÇÃO DO CUSCO CLUB (CARTEIRA + CATÁLOGO) ---------------- */
 
 // Componente visual do programa de pontos: mostra saldo, resgates recentes
 // e o catálogo de recompensas. Usa as helpers de pontos definidas no topo.
-function CuscoClan({
+function CuscoClub({
 
   auth,
   onLoginClick,
@@ -1186,11 +1185,11 @@ function CuscoClan({
   }
 
   return (
-    <section ref={scrollRef} id="cuscoclan" className="scroll-reveal py-16 sm:py-24 bg-bun ink-border border-x-0">
+    <section ref={scrollRef} id="cuscoclub" className="scroll-reveal py-16 sm:py-24 bg-bun ink-border border-x-0">
       <div className="mx-auto max-w-6xl px-4">
         <SectionTitle
           kicker="PROGRAMA DE PONTOS"
-          title="Cusco Clan 🦴"
+          title="Cusco Club 🦴"
           subtitle="A cada R$ 1 gasto no Pit Stop, teu cusco ganha 1 ponto. Troca por mimos da casa quando juntar a matilha."
         />
 
