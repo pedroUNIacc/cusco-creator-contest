@@ -835,22 +835,24 @@ function StepHeader({ n, title }: { n: number; title: string }) {
 }
 
 // Tela "Certificado de Adoção" exibida após confirmar o pedido no simulador.
-// Mostra resumo do pedido, código aleatório e CTA pra compartilhar nos Stories.
-function Certificate({
+// Mostra resumo de todos os cuscos do pedido, código aleatório e CTA pra compartilhar nos Stories.
+type CertItem = { breed: Breed; complements: string[]; drink: boolean; subtotal: number };
 
+function Certificate({
   name,
-  breed,
-  drink,
+  items,
   total,
   onReset,
 }: {
   name: string;
-  breed: Breed;
-  drink: boolean;
+  items: CertItem[];
   total: number;
   onReset: () => void;
 }) {
   const code = useMemo(() => Math.random().toString(36).slice(2, 8).toUpperCase(), []);
+  // Texto curto pra hero do certificado (1 cusco vs vários)
+  const isMulti = items.length > 1;
+  const firstBreedName = items[0].breed.name;
   return (
     <div className="mt-10 animate-pop">
       <div className="relative max-w-2xl mx-auto bg-card rounded-3xl ink-border chunky-shadow p-8 sm:p-10 text-center overflow-hidden">
@@ -861,20 +863,57 @@ function Certificate({
           </div>
           <h2 className="mt-4 font-display text-4xl sm:text-5xl font-bold">Parabéns, {name}! 🎉</h2>
           <p className="mt-3 text-foreground/80">
-            Você acabou de adotar um <strong>{breed.name}</strong> da matilha do Pit Stop do Cusco.
+            {isMulti ? (
+              <>Você acabou de adotar <strong>{items.length} cuscos</strong> da matilha do Pit Stop do Cusco.</>
+            ) : (
+              <>Você acabou de adotar um <strong>{firstBreedName}</strong> da matilha do Pit Stop do Cusco.</>
+            )}
           </p>
 
-          <div className="mt-6 grid sm:grid-cols-[140px_1fr] gap-5 items-center text-left bg-background rounded-2xl ink-border p-5">
-            <img src={breed.img} alt={breed.name} className="w-full aspect-square object-cover rounded-xl ink-border" />
-            <div className="space-y-1.5 text-sm">
-              <Row label="Raça" value={breed.name} />
-              <Row label="Recheio" value={breed.desc} />
-              <Row label="Refri" value={drink ? "Sim 🥤" : "Não"} />
-              <Row label="Código de adoção" value={`#${code}`} />
-              <div className="pt-2 mt-2 border-t flex justify-between items-baseline">
-                <span className="font-display">Total</span>
-                <span className="font-display text-2xl font-bold text-accent">R$ {total},00</span>
+          {/* Lista de cada cusco do pedido */}
+          <div className="mt-6 space-y-3 text-left">
+            {items.map((it, idx) => (
+              <div
+                key={idx}
+                className="grid sm:grid-cols-[100px_1fr] gap-4 items-center bg-background rounded-2xl ink-border p-4"
+              >
+                <img
+                  src={it.breed.img}
+                  alt={it.breed.name}
+                  className="w-full aspect-square object-cover rounded-xl ink-border"
+                />
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between items-baseline gap-2">
+                    <span className="font-display text-lg font-bold">
+                      #{idx + 1} {it.breed.name}
+                    </span>
+                    <span className="font-display font-bold text-accent">R$ {it.subtotal},00</span>
+                  </div>
+                  <Row
+                    label="Complementos"
+                    value={
+                      it.complements.length
+                        ? it.complements
+                          .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")
+                        : "—"
+                    }
+                  />
+                  <Row label="Refri" value={it.drink ? "Sim 🥤" : "Não"} />
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Rodapé: código + total geral */}
+          <div className="mt-4 bg-background rounded-2xl ink-border p-4 text-left text-sm space-y-1.5">
+            <Row label="Código de adoção" value={`#${code}`} />
+            <div className="pt-2 mt-2 border-t flex justify-between items-baseline">
+              <span className="font-display">
+                Total {isMulti && <span className="text-xs opacity-70">({items.length} cuscos)</span>}
+              </span>
+              <span className="font-display text-2xl font-bold text-accent">R$ {total},00</span>
             </div>
           </div>
 
@@ -885,7 +924,9 @@ function Certificate({
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => {
-                const text = `Acabei de adotar um ${breed.name} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
+                const text = isMulti
+                  ? `Acabei de adotar ${items.length} cuscos no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`
+                  : `Acabei de adotar um ${firstBreedName} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
                 if (navigator.share) {
                   navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => { });
                 } else {
