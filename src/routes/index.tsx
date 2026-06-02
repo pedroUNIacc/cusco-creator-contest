@@ -25,11 +25,11 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pit Stop do Cusco — Hot Dogs no Barra Shopping" },
+      { title: "Pit Stop do Cusco — Hot Dogs no BarraShoppingSul POA" },
       {
         name: "description",
         content:
-          "Monte seu cusco, vote no Cãocurso do Mês e venha nos visitar no Barra Shopping. Hot dogs com raça!",
+          "Monte seu cusco, vote no Cãocurso do Mês e venha nos visitar no BarraShoppingSul em Porto Alegre. Hot dogs com raça!",
       },
       { property: "og:title", content: "Pit Stop do Cusco" },
       {
