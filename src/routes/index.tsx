@@ -1316,7 +1316,7 @@ function Footer() {
           <img src={logo} alt="" className="h-12 w-12 rounded-full bg-background ink-border" />
           <div>
             <div className="font-display text-lg font-bold">PITSTOP DO CUSCO</div>
-            <div className="text-xs opacity-70">Barra Shopping · Quiosque</div>
+            <div className="text-xs opacity-70">BarraShoppingSul · Porto Alegre/RS</div>
           </div>
         </div>
         <div className="flex gap-4 text-sm font-bold">
