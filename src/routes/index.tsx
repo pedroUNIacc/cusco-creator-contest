@@ -479,7 +479,7 @@ function HeroCarousel() {
 // refri, preencher nome e (opcionalmente) inscrever o pet no Cãocurso.
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
-  // Estados do formulário
+  // Estados do formulário (cusco que está sendo montado agora)
   const [breedId, setBreedId] = useState<string>("fox"); // raça selecionada
   const [drink, setDrink] = useState(true);              // se vai refri (+R$1)
   const [name, setName] = useState("");                  // nome do tutor (humano)
@@ -488,9 +488,23 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
   const [showPetCard, setShowPetCard] = useState(false); // mostra form de inscrição do pet
   const [complements, setComplements] = useState<string[]>([]); // ids dos complementos marcados
 
-  // Objeto completo da raça atual e total do pedido (raça + refri)
+  // Carrinho: lista de cuscos já adicionados ao pedido (além do que está em montagem)
+  type CartItem = {
+    uid: string;            // id único da linha no carrinho
+    breedId: string;        // raça escolhida
+    complements: string[];  // ids dos complementos
+    drink: boolean;         // refri sim/não
+    subtotal: number;       // preço da linha (raça + refri)
+  };
+  const [cart, setCart] = useState<CartItem[]>([]);
+
+  // Objeto completo da raça atual + subtotal do cusco em montagem
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
-  const total = breed.price + (drink ? 1 : 0);
+  const currentSubtotal = breed.price + (drink ? 1 : 0);
+  // Soma de tudo que já foi adicionado ao carrinho
+  const cartSubtotal = cart.reduce((s, i) => s + i.subtotal, 0);
+  // Total geral exibido no rodapé do resumo
+  const total = currentSubtotal + cartSubtotal;
 
   // Ao trocar de raça os complementos zeram (o limite muda)
   useEffect(() => {
@@ -506,8 +520,31 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     });
   }
 
-  // Confirma a "adoção": credita pontos e, se marcou Cãocurso, abre o form do pet.
-  // Se o usuário não estiver logado, abre o modal de login antes.
+  // Adiciona o cusco em montagem ao carrinho e reseta os campos de produto
+  // (mantém o nome do tutor e a flag de Cãocurso pra não perder contexto).
+  function addToCart() {
+    setCart((prev) => [
+      ...prev,
+      {
+        uid: Math.random().toString(36).slice(2, 9),
+        breedId,
+        complements,
+        drink,
+        subtotal: currentSubtotal,
+      },
+    ]);
+    setBreedId("fox");
+    setDrink(true);
+    setComplements([]);
+  }
+
+  // Remove uma linha específica do carrinho
+  function removeFromCart(uid: string) {
+    setCart((prev) => prev.filter((i) => i.uid !== uid));
+  }
+
+  // Confirma a "adoção": consolida cusco em montagem + carrinho, credita pontos
+  // e, se marcou Cãocurso, abre o form do pet. Login é exigido pro Cãocurso.
   function handleAdopt() {
     setDone(true);
     if (auth.user) addPoints(auth.user.email, total);
@@ -516,6 +553,18 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
       else onLoginClick();
     }
   }
+
+  // Lista final dos itens do pedido (carrinho + cusco em montagem) usada no certificado
+  const finalItems: CartItem[] = [
+    ...cart,
+    {
+      uid: "current",
+      breedId,
+      complements,
+      drink,
+      subtotal: currentSubtotal,
+    },
+  ];
 
 
   return (
@@ -615,14 +664,69 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                   {drink ? "Bora! Refri por +R$ 1,00 🥤" : "Sem refri, valeu 🙅"}
                 </button>
               </div>
+
+              {/* Botão pra empilhar mais um cusco no mesmo pedido */}
+              <div className="mt-7">
+                <button
+                  onClick={addToCart}
+                  className="w-full sm:w-auto bg-background font-bold px-5 py-3 rounded-full ink-border chunky-shadow-sm hover:bg-primary/30 transition"
+                >
+                  ➕ Adicionar outro cusco ao pedido
+                </button>
+                <p className="mt-2 text-xs text-foreground/60">
+                  Monte quantos cuscos quiser e finalize tudo de uma vez só.
+                </p>
+              </div>
             </div>
 
             {/* Summary */}
             <aside className="bg-ink text-background rounded-3xl ink-border chunky-shadow p-6 lg:sticky lg:top-24 self-start" style={{ background: "var(--ink)" }}>
               <h3 className="font-display text-xl font-bold">Seu pedido</h3>
+
+              {/* Lista de cuscos já adicionados ao carrinho */}
+              {cart.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {cart.map((item, idx) => {
+                    const b = BREEDS.find((x) => x.id === item.breedId)!;
+                    return (
+                      <div key={item.uid} className="flex gap-2 items-start bg-background/10 rounded-xl p-2.5">
+                        <img src={b.img} alt="" className="h-10 w-10 rounded-lg object-cover ink-border shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="font-display text-sm font-bold truncate">
+                              #{idx + 1} {b.name}
+                            </span>
+                            <span className="font-bold text-xs shrink-0">R$ {item.subtotal},00</span>
+                          </div>
+                          <div className="text-[11px] opacity-75 truncate">
+                            {item.complements.length
+                              ? item.complements
+                                .map((id) => COMPLEMENTS.find((c) => c.id === id)?.emoji)
+                                .join(" ")
+                              : "sem complementos"}
+                            {item.drink ? " · 🥤" : ""}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.uid)}
+                          aria-label="Remover item"
+                          className="text-background/60 hover:text-accent text-lg leading-none px-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Cusco em montagem (linha atual) */}
               <div className="mt-4 flex gap-3 items-center">
                 <img src={breed.img} alt="" className="h-16 w-16 rounded-xl object-cover ink-border" />
                 <div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-60 font-bold">
+                    {cart.length > 0 ? "Montando agora" : ""}
+                  </div>
                   <div className="font-display text-lg">{breed.name}</div>
                   <div className="text-xs opacity-80">{breed.vibe}</div>
                 </div>
@@ -643,7 +747,9 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
               </div>
               <div className="mt-4 pt-4 border-t border-background/30 flex justify-between items-baseline">
-                <span className="font-display">Total</span>
+                <span className="font-display">
+                  Total {cart.length > 0 && <span className="text-xs opacity-70">({cart.length + 1} cuscos)</span>}
+                </span>
                 <span className="font-display text-3xl font-bold text-primary">R$ {total},00</span>
               </div>
 
@@ -674,7 +780,7 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 disabled={!name.trim()}
                 className="mt-4 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm"
               >
-                Adotar agora 🐾
+                {cart.length > 0 ? `Finalizar pedido (${cart.length + 1}) 🐾` : "Adotar agora 🐾"}
               </button>
             </aside>
           </div>
@@ -682,12 +788,17 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
           <>
             <Certificate
               name={name}
-              breed={breed}
-              drink={drink}
+              items={finalItems.map((i) => ({
+                breed: BREEDS.find((b) => b.id === i.breedId)!,
+                complements: i.complements,
+                drink: i.drink,
+                subtotal: i.subtotal,
+              }))}
               total={total}
               onReset={() => {
                 setDone(false);
                 setShowPetCard(false);
+                setCart([]);
               }}
             />
             {showPetCard && auth.user && (
