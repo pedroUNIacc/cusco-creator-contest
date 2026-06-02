@@ -702,11 +702,10 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
 
 // Pequeno helper visual: linha "rótulo : valor" usada no resumo do pedido
 function Row({ label, value }: { label: string; value: string }) {
-
   return (
-    <div className="flex justify-between">
-      <span>{label}</span>
-      <span className="font-bold">{value}</span>
+    <div className="flex justify-between gap-2">
+      <span className="shrink-0">{label}</span>
+      <span className="font-bold text-right break-words">{value}</span>
     </div>
   );
 }
