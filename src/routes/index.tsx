@@ -25,11 +25,11 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pit Stop do Cusco — Hot Dogs no Barra Shopping" },
+      { title: "Pit Stop do Cusco — Hot Dogs no BarraShoppingSul POA" },
       {
         name: "description",
         content:
-          "Monte seu cusco, vote no Cãocurso do Mês e venha nos visitar no Barra Shopping. Hot dogs com raça!",
+          "Monte seu cusco, vote no Cãocurso do Mês e venha nos visitar no BarraShoppingSul em Porto Alegre. Hot dogs com raça!",
       },
       { property: "og:title", content: "Pit Stop do Cusco" },
       {
@@ -479,7 +479,7 @@ function HeroCarousel() {
 // refri, preencher nome e (opcionalmente) inscrever o pet no Cãocurso.
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
-  // Estados do formulário
+  // Estados do formulário (cusco que está sendo montado agora)
   const [breedId, setBreedId] = useState<string>("fox"); // raça selecionada
   const [drink, setDrink] = useState(true);              // se vai refri (+R$1)
   const [name, setName] = useState("");                  // nome do tutor (humano)
@@ -488,9 +488,23 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
   const [showPetCard, setShowPetCard] = useState(false); // mostra form de inscrição do pet
   const [complements, setComplements] = useState<string[]>([]); // ids dos complementos marcados
 
-  // Objeto completo da raça atual e total do pedido (raça + refri)
+  // Carrinho: lista de cuscos já adicionados ao pedido (além do que está em montagem)
+  type CartItem = {
+    uid: string;            // id único da linha no carrinho
+    breedId: string;        // raça escolhida
+    complements: string[];  // ids dos complementos
+    drink: boolean;         // refri sim/não
+    subtotal: number;       // preço da linha (raça + refri)
+  };
+  const [cart, setCart] = useState<CartItem[]>([]);
+
+  // Objeto completo da raça atual + subtotal do cusco em montagem
   const breed = useMemo(() => BREEDS.find((b) => b.id === breedId)!, [breedId]);
-  const total = breed.price + (drink ? 1 : 0);
+  const currentSubtotal = breed.price + (drink ? 1 : 0);
+  // Soma de tudo que já foi adicionado ao carrinho
+  const cartSubtotal = cart.reduce((s, i) => s + i.subtotal, 0);
+  // Total geral exibido no rodapé do resumo
+  const total = currentSubtotal + cartSubtotal;
 
   // Ao trocar de raça os complementos zeram (o limite muda)
   useEffect(() => {
@@ -506,8 +520,31 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     });
   }
 
-  // Confirma a "adoção": credita pontos e, se marcou Cãocurso, abre o form do pet.
-  // Se o usuário não estiver logado, abre o modal de login antes.
+  // Adiciona o cusco em montagem ao carrinho e reseta os campos de produto
+  // (mantém o nome do tutor e a flag de Cãocurso pra não perder contexto).
+  function addToCart() {
+    setCart((prev) => [
+      ...prev,
+      {
+        uid: Math.random().toString(36).slice(2, 9),
+        breedId,
+        complements,
+        drink,
+        subtotal: currentSubtotal,
+      },
+    ]);
+    setBreedId("fox");
+    setDrink(true);
+    setComplements([]);
+  }
+
+  // Remove uma linha específica do carrinho
+  function removeFromCart(uid: string) {
+    setCart((prev) => prev.filter((i) => i.uid !== uid));
+  }
+
+  // Confirma a "adoção": consolida cusco em montagem + carrinho, credita pontos
+  // e, se marcou Cãocurso, abre o form do pet. Login é exigido pro Cãocurso.
   function handleAdopt() {
     setDone(true);
     if (auth.user) addPoints(auth.user.email, total);
@@ -516,6 +553,18 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
       else onLoginClick();
     }
   }
+
+  // Lista final dos itens do pedido (carrinho + cusco em montagem) usada no certificado
+  const finalItems: CartItem[] = [
+    ...cart,
+    {
+      uid: "current",
+      breedId,
+      complements,
+      drink,
+      subtotal: currentSubtotal,
+    },
+  ];
 
 
   return (
@@ -615,14 +664,69 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                   {drink ? "Bora! Refri por +R$ 1,00 🥤" : "Sem refri, valeu 🙅"}
                 </button>
               </div>
+
+              {/* Botão pra empilhar mais um cusco no mesmo pedido */}
+              <div className="mt-7">
+                <button
+                  onClick={addToCart}
+                  className="w-full sm:w-auto bg-background font-bold px-5 py-3 rounded-full ink-border chunky-shadow-sm hover:bg-primary/30 transition"
+                >
+                  ➕ Adicionar outro cusco ao pedido
+                </button>
+                <p className="mt-2 text-xs text-foreground/60">
+                  Monte quantos cuscos quiser e finalize tudo de uma vez só.
+                </p>
+              </div>
             </div>
 
             {/* Summary */}
             <aside className="bg-ink text-background rounded-3xl ink-border chunky-shadow p-6 lg:sticky lg:top-24 self-start" style={{ background: "var(--ink)" }}>
               <h3 className="font-display text-xl font-bold">Seu pedido</h3>
+
+              {/* Lista de cuscos já adicionados ao carrinho */}
+              {cart.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {cart.map((item, idx) => {
+                    const b = BREEDS.find((x) => x.id === item.breedId)!;
+                    return (
+                      <div key={item.uid} className="flex gap-2 items-start bg-background/10 rounded-xl p-2.5">
+                        <img src={b.img} alt="" className="h-10 w-10 rounded-lg object-cover ink-border shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="font-display text-sm font-bold truncate">
+                              #{idx + 1} {b.name}
+                            </span>
+                            <span className="font-bold text-xs shrink-0">R$ {item.subtotal},00</span>
+                          </div>
+                          <div className="text-[11px] opacity-75 truncate">
+                            {item.complements.length
+                              ? item.complements
+                                .map((id) => COMPLEMENTS.find((c) => c.id === id)?.emoji)
+                                .join(" ")
+                              : "sem complementos"}
+                            {item.drink ? " · 🥤" : ""}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.uid)}
+                          aria-label="Remover item"
+                          className="text-background/60 hover:text-accent text-lg leading-none px-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Cusco em montagem (linha atual) */}
               <div className="mt-4 flex gap-3 items-center">
                 <img src={breed.img} alt="" className="h-16 w-16 rounded-xl object-cover ink-border" />
                 <div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-60 font-bold">
+                    {cart.length > 0 ? "Montando agora" : ""}
+                  </div>
                   <div className="font-display text-lg">{breed.name}</div>
                   <div className="text-xs opacity-80">{breed.vibe}</div>
                 </div>
@@ -643,7 +747,9 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 <Row label="Refri" value={drink ? "R$ 1,00" : "—"} />
               </div>
               <div className="mt-4 pt-4 border-t border-background/30 flex justify-between items-baseline">
-                <span className="font-display">Total</span>
+                <span className="font-display">
+                  Total {cart.length > 0 && <span className="text-xs opacity-70">({cart.length + 1} cuscos)</span>}
+                </span>
                 <span className="font-display text-3xl font-bold text-primary">R$ {total},00</span>
               </div>
 
@@ -674,7 +780,7 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 disabled={!name.trim()}
                 className="mt-4 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm"
               >
-                Adotar agora 🐾
+                {cart.length > 0 ? `Finalizar pedido (${cart.length + 1}) 🐾` : "Adotar agora 🐾"}
               </button>
             </aside>
           </div>
@@ -682,12 +788,17 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
           <>
             <Certificate
               name={name}
-              breed={breed}
-              drink={drink}
+              items={finalItems.map((i) => ({
+                breed: BREEDS.find((b) => b.id === i.breedId)!,
+                complements: i.complements,
+                drink: i.drink,
+                subtotal: i.subtotal,
+              }))}
               total={total}
               onReset={() => {
                 setDone(false);
                 setShowPetCard(false);
+                setCart([]);
               }}
             />
             {showPetCard && auth.user && (
@@ -724,22 +835,24 @@ function StepHeader({ n, title }: { n: number; title: string }) {
 }
 
 // Tela "Certificado de Adoção" exibida após confirmar o pedido no simulador.
-// Mostra resumo do pedido, código aleatório e CTA pra compartilhar nos Stories.
-function Certificate({
+// Mostra resumo de todos os cuscos do pedido, código aleatório e CTA pra compartilhar nos Stories.
+type CertItem = { breed: Breed; complements: string[]; drink: boolean; subtotal: number };
 
+function Certificate({
   name,
-  breed,
-  drink,
+  items,
   total,
   onReset,
 }: {
   name: string;
-  breed: Breed;
-  drink: boolean;
+  items: CertItem[];
   total: number;
   onReset: () => void;
 }) {
   const code = useMemo(() => Math.random().toString(36).slice(2, 8).toUpperCase(), []);
+  // Texto curto pra hero do certificado (1 cusco vs vários)
+  const isMulti = items.length > 1;
+  const firstBreedName = items[0].breed.name;
   return (
     <div className="mt-10 animate-pop">
       <div className="relative max-w-2xl mx-auto bg-card rounded-3xl ink-border chunky-shadow p-8 sm:p-10 text-center overflow-hidden">
@@ -750,20 +863,57 @@ function Certificate({
           </div>
           <h2 className="mt-4 font-display text-4xl sm:text-5xl font-bold">Parabéns, {name}! 🎉</h2>
           <p className="mt-3 text-foreground/80">
-            Você acabou de adotar um <strong>{breed.name}</strong> da matilha do Pit Stop do Cusco.
+            {isMulti ? (
+              <>Você acabou de adotar <strong>{items.length} cuscos</strong> da matilha do Pit Stop do Cusco.</>
+            ) : (
+              <>Você acabou de adotar um <strong>{firstBreedName}</strong> da matilha do Pit Stop do Cusco.</>
+            )}
           </p>
 
-          <div className="mt-6 grid sm:grid-cols-[140px_1fr] gap-5 items-center text-left bg-background rounded-2xl ink-border p-5">
-            <img src={breed.img} alt={breed.name} className="w-full aspect-square object-cover rounded-xl ink-border" />
-            <div className="space-y-1.5 text-sm">
-              <Row label="Raça" value={breed.name} />
-              <Row label="Recheio" value={breed.desc} />
-              <Row label="Refri" value={drink ? "Sim 🥤" : "Não"} />
-              <Row label="Código de adoção" value={`#${code}`} />
-              <div className="pt-2 mt-2 border-t flex justify-between items-baseline">
-                <span className="font-display">Total</span>
-                <span className="font-display text-2xl font-bold text-accent">R$ {total},00</span>
+          {/* Lista de cada cusco do pedido */}
+          <div className="mt-6 space-y-3 text-left">
+            {items.map((it, idx) => (
+              <div
+                key={idx}
+                className="grid sm:grid-cols-[100px_1fr] gap-4 items-center bg-background rounded-2xl ink-border p-4"
+              >
+                <img
+                  src={it.breed.img}
+                  alt={it.breed.name}
+                  className="w-full aspect-square object-cover rounded-xl ink-border"
+                />
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between items-baseline gap-2">
+                    <span className="font-display text-lg font-bold">
+                      #{idx + 1} {it.breed.name}
+                    </span>
+                    <span className="font-display font-bold text-accent">R$ {it.subtotal},00</span>
+                  </div>
+                  <Row
+                    label="Complementos"
+                    value={
+                      it.complements.length
+                        ? it.complements
+                          .map((id) => COMPLEMENTS.find((c) => c.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ")
+                        : "—"
+                    }
+                  />
+                  <Row label="Refri" value={it.drink ? "Sim 🥤" : "Não"} />
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Rodapé: código + total geral */}
+          <div className="mt-4 bg-background rounded-2xl ink-border p-4 text-left text-sm space-y-1.5">
+            <Row label="Código de adoção" value={`#${code}`} />
+            <div className="pt-2 mt-2 border-t flex justify-between items-baseline">
+              <span className="font-display">
+                Total {isMulti && <span className="text-xs opacity-70">({items.length} cuscos)</span>}
+              </span>
+              <span className="font-display text-2xl font-bold text-accent">R$ {total},00</span>
             </div>
           </div>
 
@@ -774,7 +924,9 @@ function Certificate({
           <div className="mt-6 flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => {
-                const text = `Acabei de adotar um ${breed.name} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
+                const text = isMulti
+                  ? `Acabei de adotar ${items.length} cuscos no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`
+                  : `Acabei de adotar um ${firstBreedName} no Pit Stop do Cusco! 🌭🐶 #PitStopDoCusco`;
                 if (navigator.share) {
                   navigator.share({ title: "Pit Stop do Cusco", text }).catch(() => { });
                 } else {
@@ -1292,10 +1444,10 @@ function WhereWeAre() {
   return (
     <section ref={scrollRef} id="onde" className="scroll-reveal py-16 sm:py-24">
       <div className="mx-auto max-w-4xl px-4 text-center">
-        <SectionTitle kicker="VEM LATIR COM A GENTE" title="Onde estamos 📍" subtitle="Estamos no shopping mais carioca do Rio." />
+        <SectionTitle kicker="VEM LATIR COM A GENTE" title="Onde estamos 📍" subtitle="Estamos no shopping mais gaúcho de Porto Alegre." />
         <div className="mt-8 bg-card rounded-3xl ink-border chunky-shadow p-8">
-          <p className="font-display text-2xl">Barra Shopping — Quiosque Pit Stop do Cusco</p>
-          <p className="mt-2 text-foreground/80">Av. das Américas, 4.666 — Barra da Tijuca, Rio de Janeiro</p>
+          <p className="font-display text-2xl">BarraShoppingSul — Quiosque Pit Stop do Cusco</p>
+          <p className="mt-2 text-foreground/80">Av. Diário de Notícias, 300 — Cristal, Porto Alegre/RS</p>
           <p className="mt-4 text-sm">Aberto todos os dias · 10h às 22h</p>
           <div className="mt-6 inline-flex items-center gap-2 bg-primary px-4 py-2 rounded-full ink-border chunky-shadow-sm font-bold">
             🦴 Latiu? Já tá no balcão.
@@ -1316,7 +1468,7 @@ function Footer() {
           <img src={logo} alt="" className="h-12 w-12 rounded-full bg-background ink-border" />
           <div>
             <div className="font-display text-lg font-bold">PITSTOP DO CUSCO</div>
-            <div className="text-xs opacity-70">Barra Shopping · Quiosque</div>
+            <div className="text-xs opacity-70">BarraShoppingSul · Porto Alegre/RS</div>
           </div>
         </div>
         <div className="flex gap-4 text-sm font-bold">
