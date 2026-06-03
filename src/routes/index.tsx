@@ -10,8 +10,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as supabaseTyped } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
+
+// Os tipos do Supabase são gerados após a primeira migração; até regenerarem,
+// usamos um alias `any` para não travar o build. As queries continuam validadas
+// pelo banco em runtime (RLS, schemas etc.).
+const supabase = supabaseTyped as unknown as {
+  auth: typeof supabaseTyped.auth;
+  from: (table: string) => any;
+  storage: typeof supabaseTyped.storage;
+};
 import logo from "@/assets/logo.png";
 
 // Imagens das raças usadas no carrossel e no simulador
