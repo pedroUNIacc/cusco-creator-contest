@@ -129,7 +129,7 @@ function useAuth() {
     if (!session?.user) return;
     let active = true;
     supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle()
-      .then(({ data }) => { if (active && data?.name) setProfileName(data.name); });
+      .then((res: { data: { name: string } | null }) => { if (active && res.data?.name) setProfileName(res.data.name); });
     return () => { active = false; };
   }, [session?.user?.id]);
 
