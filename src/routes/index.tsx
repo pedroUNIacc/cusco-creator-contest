@@ -795,7 +795,7 @@ function Caocurso({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; on
     setPets((data ?? []) as Pet[]);
     if (auth.user) {
       const { data: votes } = await supabase.from("pet_votes").select("pet_id").eq("user_id", auth.user.id);
-      setVoted(new Set((votes ?? []).map((v) => v.pet_id)));
+      setVoted(new Set((votes ?? []).map((v: { pet_id: string }) => v.pet_id)));
     } else {
       setVoted(new Set());
     }
