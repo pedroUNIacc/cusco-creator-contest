@@ -726,12 +726,12 @@ function PetSignupCard({ user, onDone }: { user: AuthUser; onDone: () => void })
     const path = `${user.id}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("pet-photos").upload(path, photoFile, { upsert: false, contentType: photoFile.type });
     if (upErr) { setError("Não consegui enviar a foto. Tenta outra!"); setSaving(false); return; }
-    const { data: pub } = supabase.storage.from("pet-photos").getPublicUrl(path);
+    // Bucket é privado: guardamos o caminho e geramos URL assinada ao listar
     const { error: insErr } = await supabase.from("pets").insert({
       user_id: user.id,
       name: petName.trim(),
       owner_handle: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
-      photo_url: pub.publicUrl,
+      photo_url: path,
     });
     if (insErr) { setError("Não consegui inscrever teu cusco. Tenta de novo!"); setSaving(false); return; }
     window.dispatchEvent(new CustomEvent("pitstop_pets_updated"));
