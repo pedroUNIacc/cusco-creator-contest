@@ -856,6 +856,7 @@ function Caocurso({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; on
 
 function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
+  const redeemReward = useServerFn(redeemSecureReward);
   const [refreshKey, setRefreshKey] = useState(0);
   const { points, redemptions } = usePoints(auth.user?.id, refreshKey);
   const [flash, setFlash] = useState<string | null>(null);
@@ -866,17 +867,17 @@ function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     const r = REWARDS.find((x) => x.id === rewardId);
     if (!r || busy) return;
     setBusy(true);
-    const result = await redeemReward(r.name, r.cost);
-    if (!result) {
+    try {
+      const result = await redeemReward({ data: { rewardId: r.id } });
+      setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
+      setRefreshKey((k) => k + 1);
+      setTimeout(() => setFlash(null), 6000);
+    } catch {
       setFlash(`Faltam ${Math.max(r.cost - points, 0)} pontos pra ${r.name}. Continua latindo! 🐾`);
       setTimeout(() => setFlash(null), 3500);
+    } finally {
       setBusy(false);
-      return;
     }
-    setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
-    setRefreshKey((k) => k + 1);
-    setTimeout(() => setFlash(null), 6000);
-    setBusy(false);
   }
 
   return (
