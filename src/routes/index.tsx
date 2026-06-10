@@ -8,9 +8,11 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { supabase as supabaseTyped } from "@/integrations/supabase/client";
+import { createSecureOrder, redeemSecureReward } from "@/lib/cusco.functions";
 import type { Session } from "@supabase/supabase-js";
 
 // Os tipos do Supabase são gerados após a primeira migração; até regenerarem,
@@ -167,15 +169,6 @@ function usePoints(userId: string | undefined, refreshKey: number) {
   }, [userId, refreshKey]);
 
   return { points, redemptions };
-}
-
-// Os pontos agora são creditados/gastos por funções no banco de dados:
-// - INSERT em "orders" dispara trigger que credita pontos.
-// - RPC "redeem_reward" valida o saldo e cria a redenção atomicamente.
-async function redeemReward(reward: string, cost: number): Promise<{ code: string } | null> {
-  const { data, error } = await (supabase as any).rpc("redeem_reward", { _reward: reward, _cost: cost });
-  if (error || !data || !data[0]) return null;
-  return { code: data[0].code as string };
 }
 
 // ---------------- COMPONENTE RAIZ ----------------
