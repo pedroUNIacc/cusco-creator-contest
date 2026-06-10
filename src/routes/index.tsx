@@ -373,7 +373,7 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
       setSaving(false);
       return;
     }
-    await addPoints(auth.user.id, total);
+    // Pontos creditados automaticamente por trigger no banco.
     setOrderCode(code);
     setDone(true);
     setSaving(false);
