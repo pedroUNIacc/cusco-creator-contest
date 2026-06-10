@@ -169,21 +169,13 @@ function usePoints(userId: string | undefined, refreshKey: number) {
   return { points, redemptions };
 }
 
-// Soma pontos no saldo do usuário (após uma adoção/compra).
-async function addPoints(userId: string, amount: number) {
-  const { data } = await supabase.from("point_balances").select("points").eq("user_id", userId).maybeSingle();
-  const next = (data?.points ?? 0) + amount;
-  await supabase.from("point_balances").upsert({ user_id: userId, points: next, updated_at: new Date().toISOString() });
-  return next;
-}
-
-// Tenta gastar pontos. Retorna true se conseguiu.
-async function spendPoints(userId: string, amount: number): Promise<boolean> {
-  const { data } = await supabase.from("point_balances").select("points").eq("user_id", userId).maybeSingle();
-  const cur = data?.points ?? 0;
-  if (cur < amount) return false;
-  const { error } = await supabase.from("point_balances").update({ points: cur - amount, updated_at: new Date().toISOString() }).eq("user_id", userId);
-  return !error;
+// Os pontos agora são creditados/gastos por funções no banco de dados:
+// - INSERT em "orders" dispara trigger que credita pontos.
+// - RPC "redeem_reward" valida o saldo e cria a redenção atomicamente.
+async function redeemReward(reward: string, cost: number): Promise<{ code: string } | null> {
+  const { data, error } = await (supabase as any).rpc("redeem_reward", { _reward: reward, _cost: cost });
+  if (error || !data || !data[0]) return null;
+  return { code: data[0].code as string };
 }
 
 // ---------------- COMPONENTE RAIZ ----------------
@@ -381,7 +373,7 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
       setSaving(false);
       return;
     }
-    await addPoints(auth.user.id, total);
+    // Pontos creditados automaticamente por trigger no banco.
     setOrderCode(code);
     setDone(true);
     setSaving(false);
@@ -888,16 +880,14 @@ function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     const r = REWARDS.find((x) => x.id === rewardId);
     if (!r || busy) return;
     setBusy(true);
-    const ok = await spendPoints(auth.user.id, r.cost);
-    if (!ok) {
-      setFlash(`Faltam ${r.cost - points} pontos pra ${r.name}. Continua latindo! 🐾`);
+    const result = await redeemReward(r.name, r.cost);
+    if (!result) {
+      setFlash(`Faltam ${Math.max(r.cost - points, 0)} pontos pra ${r.name}. Continua latindo! 🐾`);
       setTimeout(() => setFlash(null), 3500);
       setBusy(false);
       return;
     }
-    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-    await supabase.from("redemptions").insert({ user_id: auth.user.id, reward: r.name, cost: r.cost, code });
-    setFlash(`🎉 Resgatado! Mostra o código #${code} no balcão pra retirar: ${r.name}.`);
+    setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
     setRefreshKey((k) => k + 1);
     setTimeout(() => setFlash(null), 6000);
     setBusy(false);
