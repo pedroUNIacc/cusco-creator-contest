@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          code: string
+          created_at: string
+          customer_name: string
+          id: string
+          items: Json
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          items: Json
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          items?: Json
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pet_votes: {
+        Row: {
+          created_at: string
+          id: string
+          pet_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pet_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pet_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_votes_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_handle: string
+          photo_url: string
+          updated_at: string
+          user_id: string
+          votes: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_handle: string
+          photo_url: string
+          updated_at?: string
+          user_id: string
+          votes?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_handle?: string
+          photo_url?: string
+          updated_at?: string
+          user_id?: string
+          votes?: number
+        }
+        Relationships: []
+      }
+      point_balances: {
+        Row: {
+          points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      redemptions: {
+        Row: {
+          code: string
+          cost: number
+          created_at: string
+          id: string
+          reward: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          cost: number
+          created_at?: string
+          id?: string
+          reward: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          reward?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
