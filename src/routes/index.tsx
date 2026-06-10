@@ -444,13 +444,8 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 </button>
               </div>
 
-              <div className="mt-7">
-                <button onClick={addToCart} className="w-full sm:w-auto bg-background font-bold px-5 py-3 rounded-full ink-border chunky-shadow-sm hover:bg-primary/30 transition">
-                  ➕ Adicionar outro cusco ao pedido
-                </button>
-                <p className="mt-2 text-xs text-foreground/60">Monte quantos cuscos quiser e finalize tudo de uma vez só.</p>
-              </div>
             </div>
+
 
             <aside className="bg-ink text-background rounded-3xl ink-border chunky-shadow p-6 lg:sticky lg:top-24 self-start" style={{ background: "var(--ink)" }}>
               <h3 className="font-display text-xl font-bold">Seu pedido</h3>
