@@ -880,16 +880,14 @@ function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     const r = REWARDS.find((x) => x.id === rewardId);
     if (!r || busy) return;
     setBusy(true);
-    const ok = await spendPoints(auth.user.id, r.cost);
-    if (!ok) {
-      setFlash(`Faltam ${r.cost - points} pontos pra ${r.name}. Continua latindo! 🐾`);
+    const result = await redeemReward(r.name, r.cost);
+    if (!result) {
+      setFlash(`Faltam ${Math.max(r.cost - points, 0)} pontos pra ${r.name}. Continua latindo! 🐾`);
       setTimeout(() => setFlash(null), 3500);
       setBusy(false);
       return;
     }
-    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-    await supabase.from("redemptions").insert({ user_id: auth.user.id, reward: r.name, cost: r.cost, code });
-    setFlash(`🎉 Resgatado! Mostra o código #${code} no balcão pra retirar: ${r.name}.`);
+    setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
     setRefreshKey((k) => k + 1);
     setTimeout(() => setFlash(null), 6000);
     setBusy(false);
