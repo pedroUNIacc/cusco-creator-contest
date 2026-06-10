@@ -180,7 +180,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      redeem_reward: {
+        Args: { _cost: number; _reward: string }
+        Returns: {
+          code: string
+          remaining: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
