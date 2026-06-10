@@ -726,12 +726,12 @@ function PetSignupCard({ user, onDone }: { user: AuthUser; onDone: () => void })
     const path = `${user.id}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage.from("pet-photos").upload(path, photoFile, { upsert: false, contentType: photoFile.type });
     if (upErr) { setError("Não consegui enviar a foto. Tenta outra!"); setSaving(false); return; }
-    const { data: pub } = supabase.storage.from("pet-photos").getPublicUrl(path);
+    // Bucket é privado: guardamos o caminho e geramos URL assinada ao listar
     const { error: insErr } = await supabase.from("pets").insert({
       user_id: user.id,
       name: petName.trim(),
       owner_handle: instagram.trim() || `@${user.name.split(" ")[0].toLowerCase()}`,
-      photo_url: pub.publicUrl,
+      photo_url: path,
     });
     if (insErr) { setError("Não consegui inscrever teu cusco. Tenta de novo!"); setSaving(false); return; }
     window.dispatchEvent(new CustomEvent("pitstop_pets_updated"));
@@ -792,7 +792,14 @@ function Caocurso({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; on
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("pets").select("id, name, owner_handle, votes, photo_url").order("votes", { ascending: false });
-    setPets((data ?? []) as Pet[]);
+    const rows = (data ?? []) as Pet[];
+    // Gera URLs assinadas pras fotos (bucket privado)
+    const withUrls = await Promise.all(rows.map(async (p) => {
+      if (p.photo_url?.startsWith("http")) return p;
+      const { data: signed } = await supabase.storage.from("pet-photos").createSignedUrl(p.photo_url, 60 * 60 * 24 * 7);
+      return { ...p, photo_url: signed?.signedUrl ?? p.photo_url };
+    }));
+    setPets(withUrls);
     if (auth.user) {
       const { data: votes } = await supabase.from("pet_votes").select("pet_id").eq("user_id", auth.user.id);
       setVoted(new Set((votes ?? []).map((v: { pet_id: string }) => v.pet_id)));
