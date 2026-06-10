@@ -226,7 +226,7 @@ export type Database = {
     Functions: {
       calculate_order_total: { Args: { _items: Json }; Returns: number }
       create_order: {
-        Args: { _customer_name: string; _items: Json }
+        Args: { _customer_name: string; _items: Json; _user_id: string }
         Returns: {
           code: string
           id: string
@@ -234,7 +234,7 @@ export type Database = {
         }[]
       }
       redeem_reward: {
-        Args: { _reward_id: string }
+        Args: { _reward_id: string; _user_id: string }
         Returns: {
           code: string
           remaining: number
