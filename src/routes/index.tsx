@@ -504,7 +504,12 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
                 </span>
               </label>
 
-              <button onClick={handleAdopt} disabled={!name.trim() || saving} className="mt-4 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm">
+              <button onClick={addToCart} className="mt-4 w-full bg-background/10 hover:bg-background/20 transition text-background font-bold py-3 rounded-full border border-background/30">
+                ➕ Adicionar outro cusco ao pedido
+              </button>
+
+              <button onClick={handleAdopt} disabled={!name.trim() || saving} className="mt-3 w-full bg-primary text-primary-foreground font-bold py-3 rounded-full ink-border chunky-shadow disabled:opacity-50 disabled:chunky-shadow-sm">
+
                 {saving ? "Salvando..." : !auth.user ? "Entrar pra adotar 🐾" : cart.length > 0 ? `Finalizar pedido (${cart.length + 1}) 🐾` : "Adotar agora 🐾"}
               </button>
               {!auth.user && (
