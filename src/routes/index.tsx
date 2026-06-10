@@ -169,21 +169,13 @@ function usePoints(userId: string | undefined, refreshKey: number) {
   return { points, redemptions };
 }
 
-// Soma pontos no saldo do usuário (após uma adoção/compra).
-async function addPoints(userId: string, amount: number) {
-  const { data } = await supabase.from("point_balances").select("points").eq("user_id", userId).maybeSingle();
-  const next = (data?.points ?? 0) + amount;
-  await supabase.from("point_balances").upsert({ user_id: userId, points: next, updated_at: new Date().toISOString() });
-  return next;
-}
-
-// Tenta gastar pontos. Retorna true se conseguiu.
-async function spendPoints(userId: string, amount: number): Promise<boolean> {
-  const { data } = await supabase.from("point_balances").select("points").eq("user_id", userId).maybeSingle();
-  const cur = data?.points ?? 0;
-  if (cur < amount) return false;
-  const { error } = await supabase.from("point_balances").update({ points: cur - amount, updated_at: new Date().toISOString() }).eq("user_id", userId);
-  return !error;
+// Os pontos agora são creditados/gastos por funções no banco de dados:
+// - INSERT em "orders" dispara trigger que credita pontos.
+// - RPC "redeem_reward" valida o saldo e cria a redenção atomicamente.
+async function redeemReward(reward: string, cost: number): Promise<{ code: string } | null> {
+  const { data, error } = await (supabase as any).rpc("redeem_reward", { _reward: reward, _cost: cost });
+  if (error || !data || !data[0]) return null;
+  return { code: data[0].code as string };
 }
 
 // ---------------- COMPONENTE RAIZ ----------------
