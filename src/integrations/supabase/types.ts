@@ -155,6 +155,7 @@ export type Database = {
           created_at: string
           id: string
           reward: string
+          reward_id: string | null
           user_id: string
         }
         Insert: {
@@ -163,6 +164,7 @@ export type Database = {
           created_at?: string
           id?: string
           reward: string
+          reward_id?: string | null
           user_id: string
         }
         Update: {
@@ -171,7 +173,49 @@ export type Database = {
           created_at?: string
           id?: string
           reward?: string
+          reward_id?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          active: boolean
+          cost: number
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cost: number
+          created_at?: string
+          description: string
+          emoji: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cost?: number
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -180,8 +224,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_order_total: { Args: { _items: Json }; Returns: number }
+      create_order: {
+        Args: { _customer_name: string; _items: Json; _user_id: string }
+        Returns: {
+          code: string
+          id: string
+          total: number
+        }[]
+      }
       redeem_reward: {
-        Args: { _cost: number; _reward: string }
+        Args: { _reward_id: string; _user_id: string }
         Returns: {
           code: string
           remaining: number

@@ -8,9 +8,11 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 import { supabase as supabaseTyped } from "@/integrations/supabase/client";
+import { createSecureOrder, redeemSecureReward } from "@/lib/cusco.functions";
 import type { Session } from "@supabase/supabase-js";
 
 // Os tipos do Supabase são gerados após a primeira migração; até regenerarem,
@@ -169,15 +171,6 @@ function usePoints(userId: string | undefined, refreshKey: number) {
   return { points, redemptions };
 }
 
-// Os pontos agora são creditados/gastos por funções no banco de dados:
-// - INSERT em "orders" dispara trigger que credita pontos.
-// - RPC "redeem_reward" valida o saldo e cria a redenção atomicamente.
-async function redeemReward(reward: string, cost: number): Promise<{ code: string } | null> {
-  const { data, error } = await (supabase as any).rpc("redeem_reward", { _reward: reward, _cost: cost });
-  if (error || !data || !data[0]) return null;
-  return { code: data[0].code as string };
-}
-
 // ---------------- COMPONENTE RAIZ ----------------
 function Index() {
   const auth = useAuth();
@@ -315,6 +308,7 @@ type CartItem = { uid: string; breedId: string; complements: string[]; drink: bo
 
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
+  const submitOrder = useServerFn(createSecureOrder);
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
@@ -358,26 +352,18 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
   async function handleAdopt() {
     if (!auth.user) { onLoginClick(); return; }
     setSaving(true);
-    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const items = [...cart, { uid: "current", breedId, complements, drink, subtotal: currentSubtotal }];
-    const { error } = await supabase.from("orders").insert({
-      user_id: auth.user.id,
-      customer_name: name.trim(),
-      items,
-      total,
-      code,
-    });
-    if (error) {
+    try {
+      const order = await submitOrder({ data: { customerName: name, items } });
+      setOrderCode(order.code);
+      setDone(true);
+      if (joinContest) setShowPetCard(true);
+    } catch (error) {
       console.error(error);
       alert("Não consegui salvar teu pedido. Tenta de novo!");
+    } finally {
       setSaving(false);
-      return;
     }
-    // Pontos creditados automaticamente por trigger no banco.
-    setOrderCode(code);
-    setDone(true);
-    setSaving(false);
-    if (joinContest) setShowPetCard(true);
   }
 
   const finalItems: CartItem[] = [...cart, { uid: "current", breedId, complements, drink, subtotal: currentSubtotal }];
@@ -870,6 +856,7 @@ function Caocurso({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; on
 
 function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
+  const redeemReward = useServerFn(redeemSecureReward);
   const [refreshKey, setRefreshKey] = useState(0);
   const { points, redemptions } = usePoints(auth.user?.id, refreshKey);
   const [flash, setFlash] = useState<string | null>(null);
@@ -880,17 +867,17 @@ function CuscoClub({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
     const r = REWARDS.find((x) => x.id === rewardId);
     if (!r || busy) return;
     setBusy(true);
-    const result = await redeemReward(r.name, r.cost);
-    if (!result) {
+    try {
+      const result = await redeemReward({ data: { rewardId: r.id } });
+      setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
+      setRefreshKey((k) => k + 1);
+      setTimeout(() => setFlash(null), 6000);
+    } catch {
       setFlash(`Faltam ${Math.max(r.cost - points, 0)} pontos pra ${r.name}. Continua latindo! 🐾`);
       setTimeout(() => setFlash(null), 3500);
+    } finally {
       setBusy(false);
-      return;
     }
-    setFlash(`🎉 Resgatado! Mostra o código #${result.code} no balcão pra retirar: ${r.name}.`);
-    setRefreshKey((k) => k + 1);
-    setTimeout(() => setFlash(null), 6000);
-    setBusy(false);
   }
 
   return (
