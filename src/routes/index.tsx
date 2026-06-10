@@ -792,7 +792,14 @@ function Caocurso({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; on
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("pets").select("id, name, owner_handle, votes, photo_url").order("votes", { ascending: false });
-    setPets((data ?? []) as Pet[]);
+    const rows = (data ?? []) as Pet[];
+    // Gera URLs assinadas pras fotos (bucket privado)
+    const withUrls = await Promise.all(rows.map(async (p) => {
+      if (p.photo_url?.startsWith("http")) return p;
+      const { data: signed } = await supabase.storage.from("pet-photos").createSignedUrl(p.photo_url, 60 * 60 * 24 * 7);
+      return { ...p, photo_url: signed?.signedUrl ?? p.photo_url };
+    }));
+    setPets(withUrls);
     if (auth.user) {
       const { data: votes } = await supabase.from("pet_votes").select("pet_id").eq("user_id", auth.user.id);
       setVoted(new Set((votes ?? []).map((v: { pet_id: string }) => v.pet_id)));
