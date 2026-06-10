@@ -308,6 +308,7 @@ type CartItem = { uid: string; breedId: string; complements: string[]; drink: bo
 
 function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; onLoginClick: () => void }) {
   const scrollRef = useScrollReveal();
+  const submitOrder = useServerFn(createSecureOrder);
   const [breedId, setBreedId] = useState<string>("fox");
   const [drink, setDrink] = useState(true);
   const [name, setName] = useState("");
@@ -351,26 +352,18 @@ function Simulator({ auth, onLoginClick }: { auth: ReturnType<typeof useAuth>; o
   async function handleAdopt() {
     if (!auth.user) { onLoginClick(); return; }
     setSaving(true);
-    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const items = [...cart, { uid: "current", breedId, complements, drink, subtotal: currentSubtotal }];
-    const { error } = await supabase.from("orders").insert({
-      user_id: auth.user.id,
-      customer_name: name.trim(),
-      items,
-      total,
-      code,
-    });
-    if (error) {
+    try {
+      const order = await submitOrder({ data: { customerName: name, items } });
+      setOrderCode(order.code);
+      setDone(true);
+      if (joinContest) setShowPetCard(true);
+    } catch (error) {
       console.error(error);
       alert("Não consegui salvar teu pedido. Tenta de novo!");
+    } finally {
       setSaving(false);
-      return;
     }
-    // Pontos creditados automaticamente por trigger no banco.
-    setOrderCode(code);
-    setDone(true);
-    setSaving(false);
-    if (joinContest) setShowPetCard(true);
   }
 
   const finalItems: CartItem[] = [...cart, { uid: "current", breedId, complements, drink, subtotal: currentSubtotal }];
